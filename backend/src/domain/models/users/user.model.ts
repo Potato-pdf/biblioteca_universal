@@ -10,6 +10,4 @@ export class User{
     rol!: string
     @Column(unique: true)
     email!:string
-
-
 }
