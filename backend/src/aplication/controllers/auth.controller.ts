@@ -16,10 +16,16 @@ export class AuthController {
                 return c.json({ error: "Email y contraseña son requeridos" }, 400);
             }
 
-            // Buscar usuario por credenciales
-            const user = await this.userDAO.findBYCredenciales(email, password);
+            // Buscar usuario por email
+            const user = await this.userDAO.findBYCredenciales(email);
 
             if (!user) {
+                return c.json({ error: "Credenciales inválidas" }, 401);
+            }
+
+            // Verificar contraseña hasheada
+            const isPasswordValid = await Bun.password.verify(password, user.password);
+            if (!isPasswordValid) {
                 return c.json({ error: "Credenciales inválidas" }, 401);
             }
 
