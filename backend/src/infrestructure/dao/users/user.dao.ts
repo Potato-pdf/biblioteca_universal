@@ -13,8 +13,7 @@ export class UserDAO implements IUsuarioDAO {
         return await this.userRepository.findOneBy({ id: id.toString() });
     }
 
-    async findBYCredenciales(email: string, password: string): Promise<User | null> {
-        // En producción, la contraseña debería estar hasheada
+    async findBYCredenciales(email: string): Promise<User | null> {
         return await this.userRepository.findOne({
             where: { email }
         });
