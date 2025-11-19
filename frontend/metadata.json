@@ -1,0 +1,5 @@
+{
+  "name": "Biblioteca Virtual Hanami",
+  "description": "Una biblioteca universitaria de estilo oriental con gestión de libros, usuarios y visualización de documentos PDF.",
+  "requestFramePermissions": []
+}
