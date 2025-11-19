@@ -5,5 +5,4 @@ export interface book{
     authorName: string
     description: string
     publishDate:string
-    
 }
