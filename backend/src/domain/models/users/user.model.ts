@@ -4,10 +4,13 @@ import { Column, Entity, PrimaryColumn } from "typeorm";
 export class User{
     @PrimaryColumn()
     id! :string
+    
     @Column()
     name!: string
+    
     @Column()
     rol!: string
-    @Column(unique: true)
+
+    @Column({ unique: true })
     email!:string
 }
