@@ -1,53 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Book, UserRole } from './types';
-import { MOCK_USERS, MOCK_BOOKS } from './constants';
 import SakuraCanvas from './components/SakuraCanvas';
 import { BookCard } from './components/ui/BookCard';
 import { Modal } from './components/ui/Modal';
 import { LibrarianView } from './components/LibrarianView';
 import { LogOut, Search, BookOpen, Flower2, Sparkles, ArrowRight } from 'lucide-react';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { useAuthController } from './src/controllers/auth.controller';
+import { useSearchController } from './src/controllers/search.controller';
+import { useBookController } from './src/controllers/book.controller';
+import { useUserController } from './src/controllers/user.controller';
+import { mapBookViewModelToBook, mapUserViewModelToUser } from './src/utils/mappers';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { user: authUser, isAuthenticated } = useAuth();
+  const { login: loginBackend, logout: logoutBackend, loading: loginLoading, error: loginError } = useAuthController();
+  const { searchBooks, loading: searchLoading } = useSearchController();
+  const { books: backendBooks, loadBooks, createBook, updateBook, deleteBook } = useBookController();
+  const { users: backendUsers, loadUsers, createUser, updateUser, deleteUser } = useUserController();
+
   // App State
-  const [user, setUser] = useState<User | null>(null);
-  const [usernameInput, setUsernameInput] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
 
-  // Data State
-  const [books, setBooks] = useState<Book[]>(MOCK_BOOKS);
-  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  // Data State - mapeo de ViewModels a tipos del diseño
+  const [books, setBooks] = useState<Book[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<Book[]>([]);
 
   // View State
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Handlers
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const foundUser = users.find(u => u.username === usernameInput);
-    if (foundUser) {
-      setUser(foundUser);
-      setLoginError('');
-    } else {
-      setLoginError('Usuario no encontrado.');
+  // Cargar datos al autenticarse
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadBooks();
+      if (authUser?.rol === 'bibliotecario') {
+        loadUsers();
+      }
     }
+  }, [isAuthenticated]);
+
+  // Mapear datos del backend a tipos del frontend
+  useEffect(() => {
+    setBooks(backendBooks.map(mapBookViewModelToBook));
+  }, [backendBooks]);
+
+  useEffect(() => {
+    setUsers(backendUsers.map(mapUserViewModelToUser));
+  }, [backendUsers]);
+
+  // Handlers
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await loginBackend(emailInput, passwordInput);
   };
 
   const handleLogout = () => {
-    setUser(null);
-    setUsernameInput('');
+    logoutBackend();
     setSearchTerm('');
+    setSearchResults([]);
   };
 
-  const filteredBooks = books.filter(b => 
-    b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    b.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.university.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    // El backend decide si busca interno o externo
+    const results = await searchBooks(searchTerm);
+    setSearchResults(results.map(mapBookViewModelToBook));
+  };
+
+  const filteredBooks = searchTerm ? searchResults : books;
   
   // Featured book logic (just grab the first one for demo)
   const featuredBook = books.length > 0 ? books[0] : null;
   const gridBooks = books.length > 0 ? books.slice(1) : [];
+
+  const user = authUser ? mapUserViewModelToUser(authUser) : null;
 
   // --- LOGIN SCREEN (REDESIGNED - SPLIT SCREEN) ---
   if (!user) {
@@ -101,13 +134,26 @@ const App: React.FC = () => {
 
               <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">Usuario</label>
+                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">Email</label>
                   <input 
-                    type="text" 
-                    value={usernameInput}
-                    onChange={(e) => setUsernameInput(e.target.value)}
+                    type="email" 
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
                     className="w-full px-4 py-4 bg-white border-b-2 border-stone-200 focus:border-sakura-vivid outline-none transition-all text-lg text-zen-ink placeholder-stone-300"
-                    placeholder="admin / alumno"
+                    placeholder="usuario@ejemplo.com"
+                    disabled={loginLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-stone-400 tracking-widest uppercase ml-1">Contraseña</label>
+                  <input 
+                    type="password" 
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="w-full px-4 py-4 bg-white border-b-2 border-stone-200 focus:border-sakura-vivid outline-none transition-all text-lg text-zen-ink placeholder-stone-300"
+                    placeholder="••••••••"
+                    disabled={loginLoading}
                   />
                 </div>
 
@@ -119,9 +165,10 @@ const App: React.FC = () => {
 
                 <button 
                   type="submit"
-                  className="w-full py-4 bg-zen-ink hover:bg-stone-800 text-white rounded-sm shadow-lg font-medium tracking-wide transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3 mt-8"
+                  disabled={loginLoading}
+                  className="w-full py-4 bg-zen-ink hover:bg-stone-800 text-white rounded-sm shadow-lg font-medium tracking-wide transition-all transform hover:-translate-y-1 flex justify-center items-center gap-3 mt-8 disabled:opacity-50"
                 >
-                  <span>INGRESAR</span>
+                  <span>{loginLoading ? 'INICIANDO...' : 'INGRESAR'}</span>
                   <ArrowRight size={16} />
                 </button>
               </form>
@@ -178,8 +225,12 @@ const App: React.FC = () => {
             <LibrarianView 
               books={books} 
               users={users} 
-              setBooks={setBooks} 
-              setUsers={setUsers}
+              onCreateBook={createBook}
+              onUpdateBook={updateBook}
+              onDeleteBook={deleteBook}
+              onCreateUser={createUser}
+              onUpdateUser={updateUser}
+              onDeleteUser={deleteUser}
             />
           </div>
         ) : (
@@ -204,7 +255,7 @@ const App: React.FC = () => {
                 </p>
 
                 {/* Floating Search Bar */}
-                <div className="w-full max-w-2xl relative transform transition-all duration-300 hover:-translate-y-1">
+                <form onSubmit={handleSearch} className="w-full max-w-2xl relative transform transition-all duration-300 hover:-translate-y-1">
                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                       <Search className="text-stone-400" size={20}/>
                    </div>
@@ -216,11 +267,11 @@ const App: React.FC = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                    />
                    <div className="absolute right-2 top-2 bottom-2">
-                     <button className="bg-zen-ink text-white h-full px-8 rounded-sm font-medium hover:bg-stone-700 transition-colors">
-                       Buscar
+                     <button type="submit" className="bg-zen-ink text-white h-full px-8 rounded-sm font-medium hover:bg-stone-700 transition-colors" disabled={searchLoading}>
+                       {searchLoading ? 'Buscando...' : 'Buscar'}
                      </button>
                    </div>
-                </div>
+                </form>
               </div>
             </div>
 
@@ -359,6 +410,14 @@ const App: React.FC = () => {
         )}
       </Modal>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 
