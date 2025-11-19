@@ -20,7 +20,8 @@ export class UserController {
             return c.json({ success: true, data: viewModels });
         } catch (error) {
             console.error("Error listando usuarios:", error);
-            return c.json({ error: "Error al obtener usuarios" }, 500);
+            c.status(500)
+            return c.json({ error: "Error al obtener usuarios" });
         }
     }
 
@@ -30,14 +31,16 @@ export class UserController {
             const user = await this.userDAO.getUsuarioById(id);
 
             if (!user) {
-                return c.json({ error: "Usuario no encontrado" }, 404);
+                c.status(404)
+                return c.json({ error: "Usuario no encontrado" });
             }
 
             const viewModel = UserViewModel.fromUser(user);
             return c.json({ success: true, data: viewModel });
         } catch (error) {
             console.error("Error obteniendo usuario:", error);
-            return c.json({ error: "Error al obtener usuario" }, 500);
+            c.status(404)
+            return c.json({ error: "Error al obtener usuario" });
         }
     }
 
