@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { AppDataSource } from './infrestructure/database/connecton.db';
@@ -20,10 +21,10 @@ app.use('*', cors({
 // Inicializar base de datos
 AppDataSource.initialize()
   .then(() => {
-    console.log('✅ Base de datos conectada correctamente');
+    console.log('Base de datos conectada correctamente');
   })
   .catch((error) => {
-    console.error('❌ Error conectando a la base de datos:', error);
+    console.error('Error conectando a la base de datos:', error);
   });
 
 // Ruta de prueba
