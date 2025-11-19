@@ -8,6 +8,7 @@ import authRouter from './aplication/routes/auth.routes';
 import userRouter from './aplication/routes/user.routes';
 import bookRouter from './aplication/routes/book.routes';
 import searchRouter from './aplication/routes/search.routes';
+import uploadRouter_routes from './aplication/routes/upload.routes';
 
 const app = new Hono();
 
@@ -41,6 +42,7 @@ app.route('/auth', authRouter);
 app.route('/usuarios', userRouter);
 app.route('/libros', bookRouter);
 app.route('/buscar', searchRouter);
+app.route('/', uploadRouter_routes); // UploadThing routes
 
 // Manejo de rutas no encontradas
 app.notFound((c) => {
