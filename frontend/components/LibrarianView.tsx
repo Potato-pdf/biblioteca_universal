@@ -5,55 +5,88 @@ import { Trash2, Edit, Plus, Save, BookOpen, Users, X, GraduationCap, LayoutGrid
 interface LibrarianViewProps {
   books: Book[];
   users: User[];
-  setBooks: React.Dispatch<React.SetStateAction<Book[]>>;
-  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  onCreateBook: (formData: FormData) => Promise<boolean>;
+  onUpdateBook: (id: string, formData: FormData) => Promise<boolean>;
+  onDeleteBook: (id: string) => Promise<boolean>;
+  onCreateUser: (userData: any) => Promise<boolean>;
+  onUpdateUser: (id: string, userData: any) => Promise<boolean>;
+  onDeleteUser: (id: string) => Promise<boolean>;
 }
 
-export const LibrarianView: React.FC<LibrarianViewProps> = ({ books, users, setBooks, setUsers }) => {
+export const LibrarianView: React.FC<LibrarianViewProps> = ({ 
+  books, 
+  users, 
+  onCreateBook,
+  onUpdateBook,
+  onDeleteBook,
+  onCreateUser,
+  onUpdateUser,
+  onDeleteUser
+}) => {
   const [activeTab, setActiveTab] = useState<'books' | 'users'>('books');
   const [isEditing, setIsEditing] = useState(false);
   const [editingBook, setEditingBook] = useState<Partial<Book>>({});
   const [editingUser, setEditingUser] = useState<Partial<User>>({});
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
-  // CRUD Logic Helpers (Same logic, better UI)
-  const handleDeleteBook = (id: string) => {
-    if (window.confirm('¿Eliminar libro del registro?')) setBooks(prev => prev.filter(b => b.id !== id));
+  // CRUD Logic Helpers - Ahora usa el backend
+  const handleDeleteBook = async (id: string) => {
+    if (window.confirm('¿Eliminar libro del registro?')) {
+      await onDeleteBook(id);
+    }
   };
-  const handleSaveBook = (e: React.FormEvent) => {
+  
+  const handleSaveBook = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingBook.title || !editingBook.author) return;
-    if (editingBook.id) {
-      setBooks(prev => prev.map(b => b.id === editingBook.id ? { ...b, ...editingBook } as Book : b));
-    } else {
-      const newBook: Book = {
-        ...editingBook as Book,
-        id: Date.now().toString(),
-        coverUrl: editingBook.coverUrl || 'https://picsum.photos/300/450',
-        pdfUrl: editingBook.pdfUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
-      };
-      setBooks(prev => [...prev, newBook]);
+    
+    const formData = new FormData();
+    formData.append('titulo', editingBook.title);
+    formData.append('autor', editingBook.author);
+    formData.append('descripcion', editingBook.description || '');
+    formData.append('fechaPublicacion', (editingBook.publishedYear || new Date().getFullYear()).toString());
+    
+    if (pdfFile) formData.append('pdf', pdfFile);
+    if (coverFile) formData.append('portada', coverFile);
+    
+    const success = editingBook.id 
+      ? await onUpdateBook(editingBook.id, formData)
+      : await onCreateBook(formData);
+    
+    if (success) {
+      setIsEditing(false);
+      setEditingBook({});
+      setPdfFile(null);
+      setCoverFile(null);
     }
-    setIsEditing(false);
-    setEditingBook({});
   };
-  const handleDeleteUser = (id: string) => {
-    if (window.confirm('¿Eliminar usuario?')) setUsers(prev => prev.filter(u => u.id !== id));
+  
+  const handleDeleteUser = async (id: string) => {
+    if (window.confirm('¿Eliminar usuario?')) {
+      await onDeleteUser(id);
+    }
   };
-  const handleSaveUser = (e: React.FormEvent) => {
+  
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser.username) return;
-    if (editingUser.id) {
-       setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...editingUser } as User : u));
-    } else {
-       const newUser: User = {
-         ...editingUser as User,
-         id: Date.now().toString(),
-         role: editingUser.role || UserRole.STUDENT
-       };
-       setUsers(prev => [...prev, newUser]);
+    if (!editingUser.username || !editingUser.name) return;
+    
+    const userData = {
+      nombre: editingUser.name,
+      email: editingUser.username + '@biblioteca.edu',
+      password: '123456', // Contraseña temporal
+      rol: editingUser.role === UserRole.LIBRARIAN ? 'bibliotecario' : 'alumno'
+    };
+    
+    const success = editingUser.id
+      ? await onUpdateUser(editingUser.id, userData)
+      : await onCreateUser(userData);
+    
+    if (success) {
+      setIsEditing(false);
+      setEditingUser({});
     }
-    setIsEditing(false);
-    setEditingUser({});
   };
 
   // UI Helper components for forms
@@ -101,11 +134,34 @@ export const LibrarianView: React.FC<LibrarianViewProps> = ({ books, users, setB
                     <div><Label>Título</Label><Input value={editingBook.title || ''} onChange={(e: any) => setEditingBook({...editingBook, title: e.target.value})} required /></div>
                     <div><Label>Autor</Label><Input value={editingBook.author || ''} onChange={(e: any) => setEditingBook({...editingBook, author: e.target.value})} required /></div>
                   </div>
-                  <div><Label>Universidad</Label><Input value={editingBook.university || ''} onChange={(e: any) => setEditingBook({...editingBook, university: e.target.value})} required /></div>
+                  <div><Label>Universidad</Label><Input value={editingBook.university || 'Universidad Central'} onChange={(e: any) => setEditingBook({...editingBook, university: e.target.value})} required /></div>
                   <div><Label>Descripción</Label><textarea className="w-full p-3 bg-stone-50 border border-stone-200 rounded-sm h-32 focus:border-indigo-deep outline-none" value={editingBook.description || ''} onChange={e => setEditingBook({...editingBook, description: e.target.value})} /></div>
                   <div className="grid grid-cols-3 gap-4">
                     <div><Label>Año</Label><Input type="number" value={editingBook.publishedYear || ''} onChange={(e: any) => setEditingBook({...editingBook, publishedYear: parseInt(e.target.value)})} /></div>
-                    <div className="col-span-2"><Label>URL Portada</Label><Input value={editingBook.coverUrl || ''} onChange={(e: any) => setEditingBook({...editingBook, coverUrl: e.target.value})} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Archivo PDF {!editingBook.id && <span className="text-red-500">*</span>}</Label>
+                      <input 
+                        type="file" 
+                        accept=".pdf" 
+                        onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                        className="w-full p-3 bg-stone-50 border border-stone-200 rounded-sm focus:border-indigo-deep outline-none transition-all"
+                        required={!editingBook.id}
+                      />
+                      {editingBook.pdfUrl && <p className="text-xs text-stone-500 mt-1">PDF actual: {editingBook.pdfUrl.split('/').pop()}</p>}
+                    </div>
+                    <div>
+                      <Label>Imagen Portada {!editingBook.id && <span className="text-red-500">*</span>}</Label>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                        className="w-full p-3 bg-stone-50 border border-stone-200 rounded-sm focus:border-indigo-deep outline-none transition-all"
+                        required={!editingBook.id}
+                      />
+                      {editingBook.coverUrl && <p className="text-xs text-stone-500 mt-1">Portada actual disponible</p>}
+                    </div>
                   </div>
                   <div className="pt-4 flex justify-end gap-3">
                     <button type="button" onClick={() => setIsEditing(false)} className="px-6 py-2 text-stone-500 hover:bg-stone-100 rounded-md">Cancelar</button>
