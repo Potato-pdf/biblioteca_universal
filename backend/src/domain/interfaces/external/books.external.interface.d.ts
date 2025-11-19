@@ -1,4 +1,6 @@
+import { book } from "../books/book.interface";
+
 export interface IBookService   {
-    searchExternalBooksByTitle(title: string): Promise<any[]>;
-    getExternalBookById(id: string): Promise<any | null>;
+    searchExternalBooksByTitle(title: string): Promise<book[]>;
+    getExternalBookById(id: string): Promise<book | null>;
 }

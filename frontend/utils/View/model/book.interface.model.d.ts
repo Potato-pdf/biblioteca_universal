@@ -1,4 +1,4 @@
-export interface LibroViewModel {
+export interface BookViewModel {
     id: number;
     name: string;
     imageUrl: string;
