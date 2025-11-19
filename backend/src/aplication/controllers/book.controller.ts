@@ -20,7 +20,8 @@ export class BookController {
             return c.json({ success: true, data: viewModels });
         } catch (error) {
             console.error("Error listando libros:", error);
-            return c.json({ error: "Error al obtener libros" }, 500);
+            c.status(500)
+            return c.json({ error: "Error al obtener libros" });
         }
     }
 
@@ -30,14 +31,16 @@ export class BookController {
             const book = await this.bookDAO.getLIbroInternoById(id);
 
             if (!book) {
-                return c.json({ error: "Libro no encontrado" }, 404);
+                c.status(404)
+                return c.json({ error: "Libro no encontrado" });
             }
 
             const viewModel = BookViewModel.fromInternalBook(book);
             return c.json({ success: true, data: viewModel });
         } catch (error) {
             console.error("Error obteniendo libro:", error);
-            return c.json({ error: "Error al obtener libro" }, 500);
+            c.status(500)
+            return c.json({ error: "Error al obtener libro" });
         }
     }
 
@@ -58,11 +61,13 @@ export class BookController {
             if (success) {
                 return c.json({ success: true, message: "Libro registrado exitosamente" }, 201);
             } else {
-                return c.json({ error: "No se pudo registrar el libro" }, 500);
+                c.status(500)
+                return c.json({ error: "No se pudo registrar el libro" });
             }
         } catch (error: any) {
             console.error("Error registrando libro:", error);
-            return c.json({ error: error.message || "Error al registrar libro" }, 400);
+            c.status(400)
+            return c.json({ error: error.message || "Error al registrar libro" });
         }
     }
 
@@ -84,11 +89,13 @@ export class BookController {
             if (success) {
                 return c.json({ success: true, message: "Libro actualizado exitosamente" });
             } else {
-                return c.json({ error: "No se pudo actualizar el libro" }, 500);
+                c.status(500)
+                return c.json({ error: "No se pudo actualizar el libro" });
             }
         } catch (error: any) {
             console.error("Error editando libro:", error);
-            return c.json({ error: error.message || "Error al editar libro" }, 400);
+            c.status(400)
+            return c.json({ error: error.message || "Error al editar libro" });
         }
     }
 
@@ -100,11 +107,13 @@ export class BookController {
             if (success) {
                 return c.json({ success: true, message: "Libro eliminado exitosamente" });
             } else {
-                return c.json({ error: "No se pudo eliminar el libro" }, 500);
+                c.status(500)
+                return c.json({ error: "No se pudo eliminar el libro" });
             }
         } catch (error) {
             console.error("Error eliminando libro:", error);
-            return c.json({ error: "Error al eliminar libro" }, 500);
+            c.status(500)
+            return c.json({ error: "Error al eliminar libro" });
         }
     }
 }
