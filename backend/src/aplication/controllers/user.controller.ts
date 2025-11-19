@@ -119,31 +119,7 @@ export class UserController {
             return c.json({ error: error.message || "Error al editar usuario" });
         }
     }
-    }
-
-    async editarUsuario(c: Context) {
-        try {
-            const id = parseInt(c.req.param("id"));
-            const data = await c.req.json();
-
-            const user = new User();
-            if (data.name) user.name = data.name;
-            if (data.email) user.email = data.email;
-            if (data.rol) user.rol = data.rol;
-
-            const success = await this.userCQRS.UpdateUser(id, user);
-
-            if (success) {
-                return c.json({ success: true, message: "Usuario actualizado exitosamente" });
-            } else {
-                return c.json({ error: "No se pudo actualizar el usuario" }, 500);
-            }
-        } catch (error: any) {
-            console.error("Error editando usuario:", error);
-            return c.json({ error: error.message || "Error al editar usuario" }, 400);
-        }
-    }
-
+        
     async eliminarUsuario(c: Context) {
         try {
             const id = c.req.param("id");
