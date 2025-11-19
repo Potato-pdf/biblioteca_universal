@@ -26,20 +26,17 @@ export class SearchController {
                 return c.json({ error: "Debe proporcionar un término de búsqueda" }, 400);
             }
 
-            // 1. Obtener libros internos (DAO)
             const librosInternos = await this.bookDAO.buscarLibrosINternosPorTitulo(filtro);
             const viewModelsInternos = librosInternos.map(libro => 
                 BookViewModel.fromInternalBook(libro)
             );
 
-            // 2. Obtener libros externos (ApiServices) - Ejecutar en paralelo
             const [librosUtl, librosUnam, librosOxford] = await Promise.all([
                 this.utlService.searchExternalBooksByTitle(filtro),
                 this.unamService.searchExternalBooksByTitle(filtro),
                 this.oxfordService.searchExternalBooksByTitle(filtro)
             ]);
 
-            // 3. Mapear libros externos a ViewModels
             const viewModelsUtl = librosUtl.map(libro => 
                 BookViewModel.fromExternalBook(libro, "Universidad Tecnológica de León")
             );
@@ -50,7 +47,6 @@ export class SearchController {
                 BookViewModel.fromExternalBook(libro, "Oxford University")
             );
 
-            // 4. Unir todas las listas
             const todosLosLibros = [
                 ...viewModelsInternos,
                 ...viewModelsUtl,
@@ -82,9 +78,7 @@ export class SearchController {
             const idLibro = c.req.param("idLibro");
             const idUniversidad = c.req.param("idUni");
 
-            // Verificar si es libro interno o externo
             if (idUniversidad === "interno" || idUniversidad === "Biblioteca Universidad Gustambo") {
-                // ES INTERNO - Obtener del DAO
                 const libro = await this.bookDAO.getLIbroInternoById(parseInt(idLibro));
                 
                 if (!libro) {
@@ -94,7 +88,6 @@ export class SearchController {
                 const viewModel = BookViewModel.fromInternalBook(libro);
                 return c.json({ success: true, data: viewModel });
             } else {
-                // ES EXTERNO - Llamar al ApiService correspondiente
                 let libro = null;
 
                 switch (idUniversidad) {
