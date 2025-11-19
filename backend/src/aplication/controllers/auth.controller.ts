@@ -16,21 +16,17 @@ export class AuthController {
                 return c.json({ error: "Email y contraseña son requeridos" }, 400);
             }
 
-            // Buscar usuario por email
             const user = await this.userDAO.findBYCredenciales(email);
 
             if (!user) {
                 return c.json({ error: "Credenciales inválidas" }, 401);
             }
 
-            // Verificar contraseña hasheada
             const isPasswordValid = await Bun.password.verify(password, user.password);
             if (!isPasswordValid) {
                 return c.json({ error: "Credenciales inválidas" }, 401);
             }
 
-            // En producción, aquí deberías generar un JWT
-            // Por ahora, solo devolvemos los datos del usuario
             return c.json({
                 success: true,
                 user: {
@@ -47,7 +43,6 @@ export class AuthController {
     }
 
     async logout(c: Context) {
-        // En producción, aquí invalidarías el JWT
         return c.json({ success: true, message: "Sesión cerrada" });
     }
 }
