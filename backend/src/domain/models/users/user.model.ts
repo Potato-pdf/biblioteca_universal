@@ -5,7 +5,7 @@ export class User{
     @PrimaryColumn()
     id! :string
     @Column()
-    Nombre!: string
+    name!: string
     @Column()
     rol!: string
     @Column(unique: true)
