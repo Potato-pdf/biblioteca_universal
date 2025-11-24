@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../database/connecton.db";
 import { Book } from "../../../domain/models/books/book.model";
 import { IBookDAO } from "../../../domain/interfaces/books/DAO/book.dao.interface";
-import { Like } from "typeorm";
+import { ILike } from "typeorm";
 
 export class BookDAO implements IBookDAO {
     private bookRepository = AppDataSource.getRepository(Book);
@@ -16,7 +16,7 @@ export class BookDAO implements IBookDAO {
 
     async buscarLibrosINternosPorTitulo(titulo: string): Promise<Book[]> {
         return await this.bookRepository.find({
-            where: { name: Like(`%${titulo}%`) }
+            where: { name: ILike(`%${titulo}%`) }
         });
     }
 
@@ -48,6 +48,6 @@ export class BookDAO implements IBookDAO {
             console.error("Error eliminando libro:", error);
             return false;
         }
-        
+
     }
 }
