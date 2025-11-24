@@ -13,7 +13,7 @@ export class OxfordApiService implements IBookService {
                 return [];
             }
 
-            const data = await response.json();
+            const data: any = await response.json();
 
             return data.items.map((item: any) => ({
                 id: item.id?.toString() || `oxford-${Date.now()}`,
@@ -38,7 +38,7 @@ export class OxfordApiService implements IBookService {
                 return null;
             }
 
-            const item = await response.json();
+            const item: any = await response.json();
 
             return {
                 id: item.id?.toString() || id,
