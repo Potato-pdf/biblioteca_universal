@@ -2,7 +2,7 @@ import { book } from "../../../domain/interfaces/books/book.interface";
 import { IBookService } from "../../../domain/interfaces/external/books.external.interface";
 
 export class UtlApiService implements IBookService {
-    private baseUrl = "https://api-utl-books.example.com"; // URL ficticia
+    private baseUrl = "https://api-utl-books.example.com";
 
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
@@ -15,7 +15,7 @@ export class UtlApiService implements IBookService {
                 return [];
             }
 
-            const data = await response.json();
+            const data : any = await response.json();
 
             // Mapear la respuesta al formato interno
             return data.books.map((externalBook: any) => ({
@@ -41,7 +41,7 @@ export class UtlApiService implements IBookService {
                 return null;
             }
 
-            const externalBook = await response.json();
+            const externalBook : any = await response.json();
 
             // Mapear la respuesta al formato interno
             return {
