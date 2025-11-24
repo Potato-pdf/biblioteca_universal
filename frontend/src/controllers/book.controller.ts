@@ -102,9 +102,13 @@ export const useBookController = () => {
         setError(null);
 
         try {
-            await apiService.deleteBook(id);
-            setBooks(prev => prev.filter(b => b.idLibro !== id));
-            return true;
+            const response = await apiService.deleteBook(id);
+            if (response.success) {
+                setBooks(prev => prev.filter(b => b.idLibro !== id));
+                return true;
+            } else {
+                throw new Error(response.error || 'Error al eliminar libro');
+            }
         } catch (err: any) {
             const errorMsg = err.message || 'Error al eliminar libro';
             setError(errorMsg);
