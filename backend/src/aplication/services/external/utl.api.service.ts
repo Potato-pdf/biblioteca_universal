@@ -9,16 +9,17 @@ export class UtlApiService implements IBookService {
             // Simulación de llamada HTTP externa
             // En producción, usar fetch o axios
             const response = await fetch(`${this.baseUrl}/books/search?title=${encodeURIComponent(title)}`);
-            
+
             if (!response.ok) {
                 console.error("Error en la API de UTL:", response.statusText);
                 return [];
             }
 
             const data = await response.json();
-            
+
             // Mapear la respuesta al formato interno
             return data.books.map((externalBook: any) => ({
+                id: externalBook.id?.toString() || `utl-${Date.now()}`,
                 name: externalBook.titulo,
                 imageUrl: externalBook.portada,
                 pdfUrl: externalBook.documento,
@@ -35,15 +36,16 @@ export class UtlApiService implements IBookService {
     async getExternalBookById(id: string): Promise<book | null> {
         try {
             const response = await fetch(`${this.baseUrl}/books/${id}`);
-            
+
             if (!response.ok) {
                 return null;
             }
 
             const externalBook = await response.json();
-            
+
             // Mapear la respuesta al formato interno
             return {
+                id: externalBook.id?.toString() || id,
                 name: externalBook.titulo,
                 imageUrl: externalBook.portada,
                 pdfUrl: externalBook.documento,
