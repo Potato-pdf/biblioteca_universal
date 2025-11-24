@@ -106,7 +106,7 @@ const AppContent: React.FC = () => {
 
            {/* Text Overlay */}
            <div className="absolute bottom-12 left-12 z-20 text-white max-w-md">
-              <h2 className="font-display text-5xl font-bold mb-4 drop-shadow-lg">Hanami</h2>
+              <h2 className="font-display text-5xl font-bold mb-4 drop-shadow-lg">𒊑 Hanami 𒊑</h2>
               <p className="font-serif text-xl italic text-white/90 drop-shadow-md">
                 "La belleza del aprendizaje florece en cada página."
               </p>
@@ -194,7 +194,7 @@ const AppContent: React.FC = () => {
               <div className="bg-zen-ink text-white p-2 rounded-sm shadow-md">
                 <Flower2 size={24} />
               </div>
-              <span className="font-display text-2xl font-bold tracking-tight text-zen-ink">Hanami<span className="text-sakura-vivid">.</span>Lib</span>
+              <span className="font-display text-2xl font-bold tracking-tight text-zen-ink">𒊑 Hanami 𒊑 <span className="text-sakura-vivid">.</span>Lib</span>
             </div>
             
             <div className="flex items-center gap-6">
