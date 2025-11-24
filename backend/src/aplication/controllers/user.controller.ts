@@ -65,9 +65,10 @@ export class UserController {
             }
 
             const user = new User();
-            user.name = data.nombre;  // Frontend envía 'nombre'
+            user.name = data.nombre;
             user.email = data.email;
             user.rol = data.rol;
+            user.password = data.password;
 
             const success = await this.userCQRS.CreateUser(user);
 
