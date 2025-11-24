@@ -34,7 +34,7 @@ export class AuthController {
                 success: true,
                 user: {
                     id: user.id,
-                    nombre: user.name,  // Frontend espera 'nombre'
+                    nombre: user.name,
                     email: user.email,
                     rol: user.rol
                 }
