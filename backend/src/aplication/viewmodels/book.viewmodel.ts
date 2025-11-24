@@ -27,7 +27,7 @@ export class BookViewModel {
         this.autor = data.authorName;
         this.descripcion = data.description;
         this.fechaPublicacion = data.publishDate;
-        this.universidad = data.universidad || "Biblioteca Universidad Gustambo";
+        this.universidad = data.universidad || "𒊑";
     }
 
     static fromInternalBook(book: any): BookViewModel {
@@ -39,7 +39,7 @@ export class BookViewModel {
             authorName: book.authorName,
             description: book.description,
             publishDate: book.publishDate,
-            universidad: "Biblioteca Universidad Gustambo"
+            universidad: "𒊑"
         });
     }
 
