@@ -7,15 +7,16 @@ export class OxfordApiService implements IBookService {
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
             const response = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(title)}`);
-            
+
             if (!response.ok) {
                 console.error("Error en la API de Oxford:", response.statusText);
                 return [];
             }
 
             const data = await response.json();
-            
+
             return data.items.map((item: any) => ({
+                id: item.id?.toString() || `oxford-${Date.now()}`,
                 name: item.title,
                 imageUrl: item.cover,
                 pdfUrl: item.document,
@@ -32,14 +33,15 @@ export class OxfordApiService implements IBookService {
     async getExternalBookById(id: string): Promise<book | null> {
         try {
             const response = await fetch(`${this.baseUrl}/books/${id}`);
-            
+
             if (!response.ok) {
                 return null;
             }
 
             const item = await response.json();
-            
+
             return {
+                id: item.id?.toString() || id,
                 name: item.title,
                 imageUrl: item.cover,
                 pdfUrl: item.document,
