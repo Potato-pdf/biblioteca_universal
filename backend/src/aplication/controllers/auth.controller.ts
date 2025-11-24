@@ -13,18 +13,21 @@ export class AuthController {
             const { email, password } = await c.req.json();
 
             if (!email || !password) {
-                return c.json({ error: "Email y contraseña son requeridos" }, 400);
+                c.status(400);
+                return c.json({ error: "Email y contraseña son requeridos" });
             }
 
             const user = await this.userDAO.findBYCredenciales(email);
 
             if (!user) {
-                return c.json({ error: "Credenciales inválidas" }, 401);
+                c.status(401);
+                return c.json({ error: "Credenciales inválidas" });
             }
 
             const isPasswordValid = await Bun.password.verify(password, user.password);
             if (!isPasswordValid) {
-                return c.json({ error: "Credenciales inválidas" }, 401);
+                c.status(401);
+                return c.json({ error: "Credenciales inválidas" });
             }
 
             return c.json({
@@ -37,12 +40,13 @@ export class AuthController {
                 }
             });
         } catch (error) {
-            console.error("Error en login:", error);
-            return c.json({ error: "Error interno del servidor" }, 500);
+            c.status(500);
+            return c.json({ error: "Error interno del servidor" });
         }
     }
 
     async logout(c: Context) {
+        c.status(200);
         return c.json({ success: true, message: "Sesión cerrada" });
     }
 }
