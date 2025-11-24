@@ -13,7 +13,7 @@ export class UnamApiService implements IBookService {
                 return [];
             }
 
-            const data = await response.json();
+            const data : any = await response.json();
 
             return data.resultados.map((libro: any) => ({
                 id: libro.id?.toString() || `unam-${Date.now()}`,
@@ -38,7 +38,7 @@ export class UnamApiService implements IBookService {
                 return null;
             }
 
-            const libro = await response.json();
+            const libro : any= await response.json();
 
             return {
                 id: libro.id?.toString() || id,
