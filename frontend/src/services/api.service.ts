@@ -37,7 +37,7 @@ export const apiService = {
     },
 
     createUser: async (user: any) => {
-        const response = await fetch(`${API_URL}/usuarios`, {
+        const response = await fetch(`${API_URL}/usuarios/guardar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(user),
@@ -46,7 +46,7 @@ export const apiService = {
     },
 
     updateUser: async (id: string, user: any) => {
-        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+        const response = await fetch(`${API_URL}/usuarios/editar/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(user),
@@ -68,7 +68,7 @@ export const apiService = {
     },
 
     createBook: async (book: any) => {
-        const response = await fetch(`${API_URL}/libros`, {
+        const response = await fetch(`${API_URL}/libros/guardar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(book),
@@ -77,7 +77,7 @@ export const apiService = {
     },
 
     updateBook: async (id: string, book: any) => {
-        const response = await fetch(`${API_URL}/libros/${id}`, {
+        const response = await fetch(`${API_URL}/libros/editar/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(book),
