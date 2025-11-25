@@ -15,18 +15,19 @@ export class UtlApiService implements IBookService {
                 return [];
             }
 
-            const data : any = await response.json();
+            const data: any = await response.json();
 
             // Mapear la respuesta al formato interno
-            return data.books.map((externalBook: any) => ({
+            // The user provided JSON is an array: [{ id, titulo, generoLiterario, portadaBase64, universidadPropietaria, pdfBase64 }, ...]
+            return Array.isArray(data) ? data.map((externalBook: any) => ({
                 id: externalBook.id?.toString() || `utl-${Date.now()}`,
                 name: externalBook.titulo,
-                imageUrl: externalBook.portada,
-                pdfUrl: externalBook.documento,
-                authorName: externalBook.autor,
-                description: externalBook.resumen,
-                publishDate: externalBook.anio
-            }));
+                imageUrl: externalBook.portadaBase64,
+                pdfUrl: externalBook.pdfBase64,
+                authorName: externalBook.universidadPropietaria || "UTL",
+                description: externalBook.generoLiterario,
+                publishDate: new Date().toISOString() // Default date as it's missing
+            })) : [];
         } catch (error) {
             console.error("Error conectando con API UTL:", error);
             return [];
@@ -41,17 +42,17 @@ export class UtlApiService implements IBookService {
                 return null;
             }
 
-            const externalBook : any = await response.json();
+            const externalBook: any = await response.json();
 
             // Mapear la respuesta al formato interno
             return {
                 id: externalBook.id?.toString() || id,
                 name: externalBook.titulo,
-                imageUrl: externalBook.portada,
-                pdfUrl: externalBook.documento,
-                authorName: externalBook.autor,
-                description: externalBook.resumen,
-                publishDate: externalBook.anio
+                imageUrl: externalBook.portadaBase64,
+                pdfUrl: externalBook.pdfBase64,
+                authorName: externalBook.universidadPropietaria || "UTL",
+                description: externalBook.generoLiterario,
+                publishDate: new Date().toISOString()
             };
         } catch (error) {
             console.error("Error obteniendo libro de UTL:", error);
