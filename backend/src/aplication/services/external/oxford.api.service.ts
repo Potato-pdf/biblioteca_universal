@@ -2,7 +2,7 @@ import { book } from "../../../domain/interfaces/books/book.interface";
 import { IBookService } from "../../../domain/interfaces/external/books.external.interface";
 
 export class OxfordApiService implements IBookService {
-    private baseUrl = "https://api-oxford-library.example.com"; // URL ficticia
+    private baseUrl = "http://192.168.137.1:8079/Cambridge/biblioteca/libro/getAllLibro";
 
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
@@ -13,16 +13,16 @@ export class OxfordApiService implements IBookService {
                 return [];
             }
 
-            const data: any = await response.json();
+            const data = await response.json() as any[];
 
-            return data.items.map((item: any) => ({
-                id: item.id?.toString() || `oxford-${Date.now()}`,
-                name: item.title,
-                imageUrl: item.cover,
-                pdfUrl: item.document,
-                authorName: item.author,
-                description: item.abstract,
-                publishDate: item.year
+            return data.map((item: any) => ({
+                id: item.uuid,
+                name: item.bookTitle,
+                imageUrl: item.bookCover,
+                pdfUrl: item.pdfUrl,
+                authorName: item.universidad,
+                description: item.genre,
+                publishDate: new Date().toISOString().split('T')[0]
             }));
         } catch (error) {
             console.error("Error conectando con API Oxford:", error);
@@ -41,13 +41,13 @@ export class OxfordApiService implements IBookService {
             const item: any = await response.json();
 
             return {
-                id: item.id?.toString() || id,
-                name: item.title,
-                imageUrl: item.cover,
-                pdfUrl: item.document,
-                authorName: item.author,
-                description: item.abstract,
-                publishDate: item.year
+                id: item.uuid,
+                name: item.bookTitle,
+                imageUrl: item.bookCover,
+                pdfUrl: item.pdfUrl,
+                authorName: item.universidad,
+                description: item.genre,
+                publishDate: new Date().toISOString().split('T')[0]
             };
         } catch (error) {
             console.error("Error obteniendo libro de Oxford:", error);
