@@ -1,119 +1,100 @@
-import type { BookViewModel } from '../viewmodels/book.viewmodel';
-import type { UserViewModel } from '../viewmodels/user.viewmodel';
-import type { LoginRequest, LoginResponse } from '../viewmodels/auth.viewmodel';
+const API_URL = 'http://localhost:3000';
 
-const API_BASE_URL = 'http://localhost:3000'; // Puerto del backend Hono
-
-class ApiService {
-    private baseUrl: string;
-
-    constructor() {
-        this.baseUrl = API_BASE_URL;
-    }
-
-    // Helper para hacer requests
-    private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-        const url = `${this.baseUrl}${endpoint}`;
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options?.headers,
-            },
-        });
-
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({ message: 'Error desconocido' }));
-            throw new Error(error.message || `HTTP ${response.status}`);
-        }
-
-        return response.json();
-    }
-
-    // === AUTH ===
-    async login(credentials: LoginRequest): Promise<LoginResponse> {
-        return this.request<LoginResponse>('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify(credentials),
-        });
-    }
-
-    // === BOOKS ===
-    // El backend decide si busca internos o externos
-    async searchBooks(query: string): Promise<{ success: boolean; data: BookViewModel[] }> {
-        return this.request(`/buscar?q=${encodeURIComponent(query)}`);
-    }
-
-    async getAllBooks(): Promise<{ success: boolean; data: BookViewModel[] }> {
-        return this.request('/libros');
-    }
-
-    async getBookById(id: string): Promise<{ success: boolean; data: BookViewModel }> {
-        return this.request(`/libros/${id}`);
-    }
-
-    async createBook(formData: FormData): Promise<{ success: boolean; data: BookViewModel }> {
-        // Para FormData, no enviamos Content-Type, el navegador lo maneja
-        const url = `${this.baseUrl}/libros/guardar`;
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData, // FormData incluye archivos (PDF, imagen)
-        });
-
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({ message: 'Error desconocido' }));
-            throw new Error(error.message || `HTTP ${response.status}`);
-        }
-
-        return response.json();
-    }
-
-    async updateBook(id: string, formData: FormData): Promise<{ success: boolean; data: BookViewModel }> {
-        const url = `${this.baseUrl}/libros/editar/${id}`;
-        const response = await fetch(url, {
-            method: 'PUT',
-            body: formData,
-        });
-
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({ message: 'Error desconocido' }));
-            throw new Error(error.message || `HTTP ${response.status}`);
-        }
-
-        return response.json();
-    }
-
-    async deleteBook(id: string): Promise<{ success: boolean }> {
-        return this.request(`/libros/${id}`, {
-            method: 'DELETE',
-        });
-    }
-
-    // === USERS ===
-    async getAllUsers(): Promise<{ success: boolean; data: UserViewModel[] }> {
-        return this.request('/usuarios');
-    }
-
-    async createUser(userData: { nombre: string; email: string; password: string; rol: string }): Promise<{ success: boolean; data: UserViewModel }> {
-        return this.request('/usuarios/guardar', {
-            method: 'POST',
-            body: JSON.stringify(userData),
-        });
-    }
-
-    async updateUser(id: string, userData: Partial<{ nombre: string; email: string; password?: string; rol: string }>): Promise<{ success: boolean; data: UserViewModel }> {
-        return this.request(`/usuarios/editar/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(userData),
-        });
-    }
-
-    async deleteUser(id: string): Promise<{ success: boolean }> {
-        return this.request(`/usuarios/${id}`, {
-            method: 'DELETE',
-        });
-    }
+export interface User {
+    id?: number;
+    name: string;
+    email: string;
+    rol: 'bibliotecario' | 'alumno';
+    password?: string;
 }
 
-// Singleton
-export const apiService = new ApiService();
+export interface Book {
+    id?: number;
+    name: string;
+    authorName: string;
+    imageUrl: string;
+    pdfUrl: string;
+    description?: string;
+    publishDate?: string;
+    university?: string;
+}
+
+export const apiService = {
+    // Auth
+    login: async (credentials: { email: string, password: string }) => {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+        });
+        return response.json();
+    },
+
+    // Users
+    getAllUsers: async () => {
+        const response = await fetch(`${API_URL}/usuarios`);
+        return response.json();
+    },
+
+    createUser: async (user: any) => {
+        const response = await fetch(`${API_URL}/usuarios/guardar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user),
+        });
+        return response.json();
+    },
+
+    updateUser: async (id: string, user: any) => {
+        const response = await fetch(`${API_URL}/usuarios/editar/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user),
+        });
+        return response.json();
+    },
+
+    deleteUser: async (id: string) => {
+        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+            method: 'DELETE',
+        });
+        return response.json();
+    },
+
+    // Books
+    getAllBooks: async () => {
+        const response = await fetch(`${API_URL}/libros`);
+        return response.json();
+    },
+
+    createBook: async (book: any) => {
+        const response = await fetch(`${API_URL}/libros/guardar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(book),
+        });
+        return response.json();
+    },
+
+    updateBook: async (id: string, book: any) => {
+        const response = await fetch(`${API_URL}/libros/editar/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(book),
+        });
+        return response.json();
+    },
+
+    deleteBook: async (id: string) => {
+        const response = await fetch(`${API_URL}/libros/${id}`, {
+            method: 'DELETE',
+        });
+        return response.json();
+    },
+
+    // Search
+    searchBooks: async (query: string) => {
+        const response = await fetch(`${API_URL}/buscar?q=${encodeURIComponent(query)}`);
+        return response.json();
+    }
+};

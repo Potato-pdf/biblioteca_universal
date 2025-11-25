@@ -2,23 +2,24 @@ import { book } from "../../../domain/interfaces/books/book.interface";
 import { IBookService } from "../../../domain/interfaces/external/books.external.interface";
 
 export class UtlApiService implements IBookService {
-    private baseUrl = "https://api-utl-books.example.com"; // URL ficticia
+    private baseUrl = "https://api-utl-books.example.com";
 
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
             // Simulación de llamada HTTP externa
             // En producción, usar fetch o axios
             const response = await fetch(`${this.baseUrl}/books/search?title=${encodeURIComponent(title)}`);
-            
+
             if (!response.ok) {
                 console.error("Error en la API de UTL:", response.statusText);
                 return [];
             }
 
-            const data = await response.json();
-            
+            const data : any = await response.json();
+
             // Mapear la respuesta al formato interno
             return data.books.map((externalBook: any) => ({
+                id: externalBook.id?.toString() || `utl-${Date.now()}`,
                 name: externalBook.titulo,
                 imageUrl: externalBook.portada,
                 pdfUrl: externalBook.documento,
@@ -35,15 +36,16 @@ export class UtlApiService implements IBookService {
     async getExternalBookById(id: string): Promise<book | null> {
         try {
             const response = await fetch(`${this.baseUrl}/books/${id}`);
-            
+
             if (!response.ok) {
                 return null;
             }
 
-            const externalBook = await response.json();
-            
+            const externalBook : any = await response.json();
+
             // Mapear la respuesta al formato interno
             return {
+                id: externalBook.id?.toString() || id,
                 name: externalBook.titulo,
                 imageUrl: externalBook.portada,
                 pdfUrl: externalBook.documento,

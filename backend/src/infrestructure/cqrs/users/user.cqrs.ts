@@ -54,4 +54,8 @@ export class UserCQRS implements IUserCQRS {
 
         return await this.userDAO.updateUsuario(id.toString(), data);
     }
+
+    async DeleteUser(id: number): Promise<boolean> {
+        return await this.userDAO.deleteUsuario(id.toString());
+    }
 }

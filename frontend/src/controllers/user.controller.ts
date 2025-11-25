@@ -10,7 +10,7 @@ export const useUserController = () => {
     const loadUsers = async () => {
         setLoading(true);
         setError(null);
-        
+
         try {
             const response = await apiService.getAllUsers();
             setUsers(response.data);
@@ -26,11 +26,19 @@ export const useUserController = () => {
     const createUser = async (userData: { nombre: string; email: string; password: string; rol: string }): Promise<boolean> => {
         setLoading(true);
         setError(null);
-        
+
         try {
             const response = await apiService.createUser(userData);
-            setUsers(prev => [...prev, response.data]);
-            return true;
+            if (response.success) {
+                if (response.data) {
+                    setUsers(prev => [...prev, response.data]);
+                } else {
+                    await loadUsers();
+                }
+                return true;
+            } else {
+                throw new Error(response.error || 'Error al crear usuario');
+            }
         } catch (err: any) {
             const errorMsg = err.message || 'Error al crear usuario';
             setError(errorMsg);
@@ -44,11 +52,19 @@ export const useUserController = () => {
     const updateUser = async (id: string, userData: Partial<{ nombre: string; email: string; password?: string; rol: string }>): Promise<boolean> => {
         setLoading(true);
         setError(null);
-        
+
         try {
             const response = await apiService.updateUser(id, userData);
-            setUsers(prev => prev.map(u => u.id === id ? response.data : u));
-            return true;
+            if (response.success) {
+                if (response.data) {
+                    setUsers(prev => prev.map(u => u.id === id ? response.data : u));
+                } else {
+                    await loadUsers();
+                }
+                return true;
+            } else {
+                throw new Error(response.error || 'Error al actualizar usuario');
+            }
         } catch (err: any) {
             const errorMsg = err.message || 'Error al actualizar usuario';
             setError(errorMsg);
@@ -62,11 +78,15 @@ export const useUserController = () => {
     const deleteUser = async (id: string): Promise<boolean> => {
         setLoading(true);
         setError(null);
-        
+
         try {
-            await apiService.deleteUser(id);
-            setUsers(prev => prev.filter(u => u.id !== id));
-            return true;
+            const response = await apiService.deleteUser(id);
+            if (response.success) {
+                setUsers(prev => prev.filter(u => u.id !== id));
+                return true;
+            } else {
+                throw new Error(response.error || 'Error al eliminar usuario');
+            }
         } catch (err: any) {
             const errorMsg = err.message || 'Error al eliminar usuario';
             setError(errorMsg);

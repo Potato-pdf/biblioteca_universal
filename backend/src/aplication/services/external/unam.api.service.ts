@@ -7,15 +7,16 @@ export class UnamApiService implements IBookService {
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
             const response = await fetch(`${this.baseUrl}/libros?busqueda=${encodeURIComponent(title)}`);
-            
+
             if (!response.ok) {
                 console.error("Error en la API de UNAM:", response.statusText);
                 return [];
             }
 
-            const data = await response.json();
-            
+            const data : any = await response.json();
+
             return data.resultados.map((libro: any) => ({
+                id: libro.id?.toString() || `unam-${Date.now()}`,
                 name: libro.nombre,
                 imageUrl: libro.imagen,
                 pdfUrl: libro.pdf,
@@ -32,14 +33,15 @@ export class UnamApiService implements IBookService {
     async getExternalBookById(id: string): Promise<book | null> {
         try {
             const response = await fetch(`${this.baseUrl}/libros/${id}`);
-            
+
             if (!response.ok) {
                 return null;
             }
 
-            const libro = await response.json();
-            
+            const libro : any= await response.json();
+
             return {
+                id: libro.id?.toString() || id,
                 name: libro.nombre,
                 imageUrl: libro.imagen,
                 pdfUrl: libro.pdf,

@@ -52,12 +52,12 @@ export class UserController {
             } catch (parseError: any) {
                 console.error("Error parseando JSON:", parseError);
                 c.status(400);
-                return c.json({ 
+                return c.json({
                     error: "JSON inválido. Verifica que no tenga comas extras al final y que las comillas estén correctas.",
-                    details: parseError.message 
+                    details: parseError.message
                 });
             }
-            
+
             // Validar campos requeridos
             if (!data.nombre || !data.email || !data.rol) {
                 c.status(400);
@@ -65,9 +65,10 @@ export class UserController {
             }
 
             const user = new User();
-            user.name = data.nombre;  // Frontend envía 'nombre'
+            user.name = data.nombre;
             user.email = data.email;
             user.rol = data.rol;
+            user.password = data.password;
 
             const success = await this.userCQRS.CreateUser(user);
 
@@ -119,11 +120,10 @@ export class UserController {
             return c.json({ error: error.message || "Error al editar usuario" });
         }
     }
-        
     async eliminarUsuario(c: Context) {
         try {
-            const id = c.req.param("id");
-            const success = await this.userDAO.deleteUsuario(id);
+            const id = parseInt(c.req.param("id"));
+            const success = await this.userCQRS.DeleteUser(id);
 
             if (success) {
                 return c.json({ success: true, message: "Usuario eliminado exitosamente" });
