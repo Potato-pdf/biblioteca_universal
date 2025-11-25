@@ -31,7 +31,11 @@ export class UserDAO implements IUsuarioDAO {
 
     async updateUsuario(id: string, user: Partial<User>): Promise<boolean> {
         try {
-            const result = await this.userRepository.update({ id }, user);
+            const userFound = await this.userRepository.findOneBy({ id: id.toString() });
+            if (!userFound) {
+                return false;
+            }
+            const result = await this.userRepository.update({ id: id.toString() }, user);
             return result.affected ? result.affected > 0 : false;
         } catch (error) {
             console.error("Error actualizando usuario:", error);
@@ -41,7 +45,7 @@ export class UserDAO implements IUsuarioDAO {
 
     async deleteUsuario(id: string): Promise<boolean> {
         try {
-            const result = await this.userRepository.delete({ id });
+            const result = await this.userRepository.delete({ id: id.toString() });
             return result.affected ? result.affected > 0 : false;
         } catch (error) {
             console.error("Error eliminando usuario:", error);
