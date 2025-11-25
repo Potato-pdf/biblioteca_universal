@@ -41,7 +41,7 @@ export class BookCQRS implements IBookCQRS {
         return await this.bookDAO.insertLibro(data);
     }
 
-    async UpdateBook(id: number, data: Book): Promise<boolean> {
+    async UpdateBook(id: string, data: Book): Promise<boolean> {
         // Validaciones simples
         if (!data.name && !data.authorName && !data.imageUrl && !data.pdfUrl) {
             throw new Error("Debe proporcionar al menos un campo para actualizar");
@@ -70,6 +70,6 @@ export class BookCQRS implements IBookCQRS {
         }
 
         // Llamar al DAO para ejecutar el cambio
-        return await this.bookDAO.updateLibro(id.toString(), data);
+        return await this.bookDAO.updateLibro(id, data);
     }
 }

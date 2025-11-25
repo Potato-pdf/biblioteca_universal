@@ -27,7 +27,7 @@ export class UserController {
 
     async obtenerUsuario(c: Context) {
         try {
-            const id = parseInt(c.req.param("id"));
+            const id = c.req.param("id");
             const user = await this.userDAO.getUsuarioById(id);
 
             if (!user) {
@@ -93,7 +93,7 @@ export class UserController {
     }
     async editarUsuario(c: Context) {
         try {
-            const id = parseInt(c.req.param("id"));
+            const id = c.req.param("id");
             const data = await c.req.json();
 
             const user = new User();
@@ -122,7 +122,7 @@ export class UserController {
     }
     async eliminarUsuario(c: Context) {
         try {
-            const id = parseInt(c.req.param("id"));
+            const id = c.req.param("id");
             const success = await this.userCQRS.DeleteUser(id);
 
             if (success) {

@@ -10,8 +10,8 @@ export class BookDAO implements IBookDAO {
         return await this.bookRepository.find();
     }
 
-    async getLIbroInternoById(id: number): Promise<Book | null> {
-        return await this.bookRepository.findOneBy({ id: id.toString() });
+    async getLIbroInternoById(id: string): Promise<Book | null> {
+        return await this.bookRepository.findOneBy({ id: id });
     }
 
     async buscarLibrosINternosPorTitulo(titulo: string): Promise<Book[]> {

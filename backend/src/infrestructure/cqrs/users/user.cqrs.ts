@@ -36,7 +36,7 @@ export class UserCQRS implements IUserCQRS {
         return await this.userDAO.insertUsuario(data);
     }
 
-    async UpdateUser(id: number, data: User): Promise<boolean> {
+    async UpdateUser(id: string, data: User): Promise<boolean> {
         if (!data.name && !data.email && !data.rol) {
             throw new Error("Debe proporcionar al menos un campo para actualizar");
         }
@@ -52,10 +52,10 @@ export class UserCQRS implements IUserCQRS {
             throw new Error("Rol inválido");
         }
 
-        return await this.userDAO.updateUsuario(id.toString(), data);
+        return await this.userDAO.updateUsuario(id, data);
     }
 
-    async DeleteUser(id: number): Promise<boolean> {
-        return await this.userDAO.deleteUsuario(id.toString());
+    async DeleteUser(id: string): Promise<boolean> {
+        return await this.userDAO.deleteUsuario(id);
     }
 }

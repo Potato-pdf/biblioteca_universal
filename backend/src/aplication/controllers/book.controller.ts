@@ -27,7 +27,7 @@ export class BookController {
 
     async obtenerLibro(c: Context) {
         try {
-            const id = parseInt(c.req.param("id"));
+            const id = c.req.param("id");
             const book = await this.bookDAO.getLIbroInternoById(id);
 
             if (!book) {
@@ -73,7 +73,7 @@ export class BookController {
 
     async editarLibro(c: Context) {
         try {
-            const id = parseInt(c.req.param("id"));
+            const id = c.req.param("id");
             const data = await c.req.json();
 
             const book = new Book();
