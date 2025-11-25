@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { apiService, Book } from '../services/api.service';
+import { apiService } from '../services/api.service';
+import { BookViewModel } from '../viewmodels/book.viewmodel';
 import { ArrowLeft, Search, BookOpen } from 'lucide-react';
 import { PDFViewer } from './PDFViewer';
 
@@ -9,9 +10,9 @@ interface BookSearchProps {
 
 export const BookSearch: React.FC<BookSearchProps> = ({ onBack }) => {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<Book[]>([]);
+    const [results, setResults] = useState<BookViewModel[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+    const [selectedBook, setSelectedBook] = useState<BookViewModel | null>(null);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,7 +34,7 @@ export const BookSearch: React.FC<BookSearchProps> = ({ onBack }) => {
     if (selectedBook) {
         return (
             <PDFViewer
-                pdfBase64={selectedBook.pdfBase64}
+                pdfUrl={selectedBook.pdfUrl}
                 title={selectedBook.titulo}
                 onBack={() => setSelectedBook(null)}
             />
@@ -73,9 +74,9 @@ export const BookSearch: React.FC<BookSearchProps> = ({ onBack }) => {
                     {results.map((book, index) => (
                         <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
                             <div className="h-48 bg-gray-200 relative overflow-hidden">
-                                {book.portadaBase64 ? (
+                                {book.portadaUrl ? (
                                     <img
-                                        src={book.portadaBase64.startsWith('data:') ? book.portadaBase64 : `data:image/jpeg;base64,${book.portadaBase64}`}
+                                        src={book.portadaUrl}
                                         alt={book.titulo}
                                         className="w-full h-full object-cover"
                                     />
@@ -90,7 +91,7 @@ export const BookSearch: React.FC<BookSearchProps> = ({ onBack }) => {
                             </div>
                             <div className="p-4">
                                 <h3 className="text-xl font-bold text-gray-800 mb-2 truncate">{book.titulo}</h3>
-                                <p className="text-gray-600 text-sm mb-4">{book.genero}</p>
+                                <p className="text-gray-600 text-sm mb-4">{book.descripcion}</p>
                                 <button
                                     onClick={() => setSelectedBook(book)}
                                     className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition flex items-center justify-center"
