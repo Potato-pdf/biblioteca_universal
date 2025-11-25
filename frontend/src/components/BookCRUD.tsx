@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService, Book } from '../services/api.service';
+import { BookViewModel } from '../viewmodels/book.viewmodel';
 import { ArrowLeft, Edit, Trash2, Plus, Upload } from 'lucide-react';
 
 interface BookCRUDProps {
@@ -7,7 +8,7 @@ interface BookCRUDProps {
 }
 
 export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
-    const [books, setBooks] = useState<Book[]>([]);
+    const [books, setBooks] = useState<BookViewModel[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentBook, setCurrentBook] = useState<Partial<Book>>({});
     const [isEditing, setIsEditing] = useState(false);
@@ -18,7 +19,7 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
 
     const loadBooks = async () => {
         try {
-            const response = await apiService.getBooks();
+            const response = await apiService.getAllBooks();
             if (response.success) {
                 setBooks(response.data);
             }
@@ -57,7 +58,7 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
         }
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string) => {
         if (window.confirm('¿Estás seguro de eliminar este libro?')) {
             try {
                 await apiService.deleteBook(id);
@@ -68,9 +69,19 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
         }
     };
 
-    const openModal = (book?: Book) => {
+    const openModal = (book?: BookViewModel) => {
         if (book) {
-            setCurrentBook(book);
+            // Map ViewModel to Book (DTO) for editing
+            // Note: This assumes the form uses 'titulo' but backend expects 'name'. 
+            // We might need to adjust this if the form is indeed sending 'titulo'.
+            // For now, we just map what we have to avoid type errors.
+            setCurrentBook({
+                id: book.idLibro,
+                name: book.titulo,
+                description: book.descripcion,
+                portadaUrl: book.portadaUrl,
+                pdfUrl: book.pdfUrl
+            } as any);
             setIsEditing(true);
         } else {
             setCurrentBook({});
@@ -110,17 +121,17 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
                             {books.map((book) => (
                                 <tr key={book.id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        {book.portadaBase64 && (
-                                            <img src={book.portadaBase64} alt="Portada" className="h-12 w-8 object-cover rounded" />
+                                        {book.portadaUrl && (
+                                            <img src={book.portadaUrl} alt="Portada" className="h-12 w-8 object-cover rounded" />
                                         )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">{book.titulo}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{book.genero}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{book.descripcion}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button onClick={() => openModal(book)} className="text-indigo-600 hover:text-indigo-900 mr-4">
                                             <Edit size={18} />
                                         </button>
-                                        <button onClick={() => book.id && handleDelete(book.id)} className="text-red-600 hover:text-red-900">
+                                        <button onClick={() => book.idLibro && handleDelete(book.idLibro)} className="text-red-600 hover:text-red-900">
                                             <Trash2 size={18} />
                                         </button>
                                     </td>
@@ -140,18 +151,18 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
                                 <label className="block text-sm font-bold mb-2">Título</label>
                                 <input
                                     type="text"
-                                    value={currentBook.titulo || ''}
-                                    onChange={(e) => setCurrentBook({ ...currentBook, titulo: e.target.value })}
+                                    value={currentBook.name || ''}
+                                    onChange={(e) => setCurrentBook({ ...currentBook, name: e.target.value })}
                                     className="w-full p-2 border rounded"
                                     required
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-sm font-bold mb-2">Género</label>
+                                <label className="block text-sm font-bold mb-2">Descripción</label>
                                 <input
                                     type="text"
-                                    value={currentBook.genero || ''}
-                                    onChange={(e) => setCurrentBook({ ...currentBook, genero: e.target.value })}
+                                    value={currentBook.description || ''}
+                                    onChange={(e) => setCurrentBook({ ...currentBook, description: e.target.value })}
                                     className="w-full p-2 border rounded"
                                     required
                                 />
@@ -170,9 +181,11 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
                                         />
                                     </label>
                                 </div>
-                                {currentBook.portadaBase64 && (
+                                {currentBook.portadaBase64 ? (
                                     <img src={currentBook.portadaBase64} alt="Preview" className="mt-2 h-20 object-contain" />
-                                )}
+                                ) : currentBook.portadaUrl ? (
+                                    <img src={currentBook.portadaUrl} alt="Current" className="mt-2 h-20 object-contain" />
+                                ) : null}
                             </div>
                             <div className="mb-6">
                                 <label className="block text-sm font-bold mb-2">PDF (Documento)</label>
