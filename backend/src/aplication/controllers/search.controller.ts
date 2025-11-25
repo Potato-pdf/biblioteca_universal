@@ -27,7 +27,7 @@ export class SearchController {
             }
 
             const librosInternos = await this.bookDAO.buscarLibrosINternosPorTitulo(filtro);
-            const viewModelsInternos = librosInternos.map(libro => 
+            const viewModelsInternos = librosInternos.map(libro =>
                 BookViewModel.fromInternalBook(libro)
             );
 
@@ -37,13 +37,13 @@ export class SearchController {
                 this.oxfordService.searchExternalBooksByTitle(filtro)
             ]);
 
-            const viewModelsUtl = librosUtl.map(libro => 
+            const viewModelsUtl = librosUtl.map(libro =>
                 BookViewModel.fromExternalBook(libro, "Universidad Tecnológica de León")
             );
-            const viewModelsUnam = librosUnam.map(libro => 
+            const viewModelsUnam = librosUnam.map(libro =>
                 BookViewModel.fromExternalBook(libro, "Universidad Nacional Autónoma de México")
             );
-            const viewModelsOxford = librosOxford.map(libro => 
+            const viewModelsOxford = librosOxford.map(libro =>
                 BookViewModel.fromExternalBook(libro, "Oxford University")
             );
 
@@ -54,8 +54,8 @@ export class SearchController {
                 ...viewModelsOxford
             ];
 
-            return c.json({ 
-                success: true, 
+            return c.json({
+                success: true,
                 data: todosLosLibros,
                 stats: {
                     internos: viewModelsInternos.length,
@@ -79,8 +79,8 @@ export class SearchController {
             const idUniversidad = c.req.param("idUni");
 
             if (idUniversidad === "interno" || idUniversidad === "Biblioteca Universidad Gustambo") {
-                const libro = await this.bookDAO.getLIbroInternoById(parseInt(idLibro));
-                
+                const libro = await this.bookDAO.getLIbroInternoById(idLibro);
+
                 if (!libro) {
                     return c.json({ error: "Libro no encontrado" }, 404);
                 }
