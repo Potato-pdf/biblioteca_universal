@@ -2,16 +2,18 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 
 interface PDFViewerProps {
-    pdfBase64: string;
+    pdfUrl: string;
     title: string;
     onBack: () => void;
 }
 
-export const PDFViewer: React.FC<PDFViewerProps> = ({ pdfBase64, title, onBack }) => {
-    // Ensure the base64 string has the correct prefix
-    const pdfSrc = pdfBase64.startsWith('data:application/pdf;base64,')
-        ? pdfBase64
-        : `data:application/pdf;base64,${pdfBase64}`;
+export const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, title, onBack }) => {
+    // Determine if it's a URL or Base64
+    const isBase64 = !pdfUrl.startsWith('http') && !pdfUrl.startsWith('blob:');
+
+    const pdfSrc = isBase64
+        ? (pdfUrl.startsWith('data:application/pdf;base64,') ? pdfUrl : `data:application/pdf;base64,${pdfUrl}`)
+        : pdfUrl;
 
     return (
         <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
