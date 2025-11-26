@@ -21,11 +21,11 @@ export class UtlApiService implements IBookService {
             // The user provided JSON is an array: [{ id, titulo, generoLiterario, portadaBase64, universidadPropietaria, pdfBase64 }, ...]
             return Array.isArray(data) ? data.map((externalBook: any) => ({
                 id: externalBook.id?.toString() || `utl-${Date.now()}`,
-                name: externalBook.titulo,
-                imageUrl: externalBook.portadaBase64,
-                pdfUrl: externalBook.pdfBase64,
+                titulo: externalBook.titulo,
+                portadaBase64: externalBook.portadaBase64,
+                pdfBase64: externalBook.pdfBase64,
                 authorName: externalBook.universidadPropietaria || "UTL",
-                description: externalBook.generoLiterario,
+                genero: externalBook.generoLiterario,
                 publishDate: new Date().toISOString() // Default date as it's missing
             })) : [];
         } catch (error) {
@@ -47,11 +47,11 @@ export class UtlApiService implements IBookService {
             // Mapear la respuesta al formato interno
             return {
                 id: externalBook.id?.toString() || id,
-                name: externalBook.titulo,
-                imageUrl: externalBook.portadaBase64,
-                pdfUrl: externalBook.pdfBase64,
+                titulo: externalBook.titulo,
+                portadaBase64: externalBook.portadaBase64,
+                pdfBase64: externalBook.pdfBase64,
                 authorName: externalBook.universidadPropietaria || "UTL",
-                description: externalBook.generoLiterario,
+                genero: externalBook.generoLiterario,
                 publishDate: new Date().toISOString()
             };
         } catch (error) {
