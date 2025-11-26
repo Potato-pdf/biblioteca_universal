@@ -19,11 +19,11 @@ export class UnamApiService implements IBookService {
 
             return data.map((libro: any) => ({
                 id: libro.id,
-                name: libro.titulo,
-                imageUrl: libro.portadaBase64,
-                pdfUrl: libro.pdfBase64,
+                titulo: libro.titulo,
+                portadaBase64: libro.portadaBase64,
+                pdfBase64: libro.pdfBase64,
                 authorName: libro.universidadPropietaria,
-                description: libro.generoLiterario,
+                genero: libro.generoLiterario,
                 publishDate: new Date().toISOString().split('T')[0] // Fecha por defecto
             }));
         } catch (error) {
@@ -52,11 +52,11 @@ export class UnamApiService implements IBookService {
             // Si el endpoint devuelve un solo objeto:
             return {
                 id: libro.id,
-                name: libro.titulo,
-                imageUrl: libro.portadaBase64,
-                pdfUrl: libro.pdfBase64,
+                titulo: libro.titulo,
+                portadaBase64: libro.portadaBase64,
+                pdfBase64: libro.pdfBase64,
                 authorName: libro.universidadPropietaria,
-                description: libro.generoLiterario,
+                genero: libro.generoLiterario,
                 publishDate: new Date().toISOString().split('T')[0]
             };
         } catch (error) {
