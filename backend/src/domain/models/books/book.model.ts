@@ -6,19 +6,19 @@ export class Book {
     id!: string;
 
     @Column("varchar", { length: 500 })
-    name!: string;
+    titulo!: string;
 
     @Column("text")
-    imageUrl!: string;
+    portadaBase64!: string;
 
     @Column("varchar", { length: 255 })
     authorName!: string;
 
     @Column("text")
-    pdfUrl!: string;
+    pdfBase64!: string;
 
-    @Column("text")
-    description!: string;
+    @Column("varchar", { length: 255 })
+    genero!: string;
 
     @Column("varchar", { length: 50 })
     publishDate!: string;

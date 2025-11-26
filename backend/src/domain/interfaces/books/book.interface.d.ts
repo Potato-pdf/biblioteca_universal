@@ -2,10 +2,10 @@
 
 export interface book {
     id: string
-    name: string
-    imageUrl: string
-    pdfUrl: string
+    titulo: string
+    portadaBase64: string
+    pdfBase64: string
     authorName: string
-    description: string
+    genero: string
     publishDate: string
 }

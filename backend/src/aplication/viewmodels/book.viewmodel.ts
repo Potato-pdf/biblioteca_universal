@@ -12,20 +12,20 @@ export class BookViewModel {
 
     constructor(data: {
         id: string;
-        name: string;
-        imageUrl: string;
-        pdfUrl: string;
+        titulo: string;
+        portadaBase64: string;
+        pdfBase64: string;
         authorName: string;
-        description: string;
+        genero: string;
         publishDate: string;
         universidad?: string;
     }) {
         this.idLibro = data.id;
-        this.titulo = data.name;
-        this.portadaUrl = data.imageUrl;
-        this.pdfUrl = data.pdfUrl;
+        this.titulo = data.titulo;
+        this.portadaUrl = data.portadaBase64;
+        this.pdfUrl = data.pdfBase64;
         this.autor = data.authorName;
-        this.descripcion = data.description;
+        this.descripcion = data.genero;
         this.fechaPublicacion = data.publishDate;
         this.universidad = data.universidad || "𒊑";
     }
@@ -33,11 +33,11 @@ export class BookViewModel {
     static fromInternalBook(book: any): BookViewModel {
         return new BookViewModel({
             id: book.id,
-            name: book.name,
-            imageUrl: book.imageUrl,
-            pdfUrl: book.pdfUrl,
+            titulo: book.titulo,
+            portadaBase64: book.portadaBase64,
+            pdfBase64: book.pdfBase64,
             authorName: book.authorName,
-            description: book.description,
+            genero: book.genero,
             publishDate: book.publishDate,
             universidad: "𒊑"
         });
@@ -46,11 +46,11 @@ export class BookViewModel {
     static fromExternalBook(book: book, universidad: string): BookViewModel {
         return new BookViewModel({
             id: book.id,
-            name: book.name,
-            imageUrl: book.imageUrl,
-            pdfUrl: book.pdfUrl,
+            titulo: book.titulo,
+            portadaBase64: book.portadaBase64,
+            pdfBase64: book.pdfBase64,
             authorName: book.authorName,
-            description: book.description,
+            genero: book.genero,
             publishDate: book.publishDate,
             universidad: universidad
         });
