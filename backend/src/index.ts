@@ -8,7 +8,6 @@ import authRouter from './aplication/routes/auth.routes';
 import userRouter from './aplication/routes/user.routes';
 import bookRouter from './aplication/routes/book.routes';
 import searchRouter from './aplication/routes/search.routes';
-import uploadRouter_routes from './aplication/routes/upload.routes';
 
 const app = new Hono();
 
@@ -30,7 +29,7 @@ AppDataSource.initialize()
 
 // Ruta de prueba
 app.get('/', (c) => {
-  return c.json({ 
+  return c.json({
     message: '𒊑 API Biblioteca Universal 𒊑',
     version: '𒊑 1.0.0 𒊑 ',
     status: 'ペン online ペン'
@@ -42,7 +41,6 @@ app.route('/auth', authRouter);
 app.route('/usuarios', userRouter);
 app.route('/libros', bookRouter);
 app.route('/buscar', searchRouter);
-app.route('/', uploadRouter_routes); // UploadThing routes
 
 // Manejo de rutas no encontradas
 app.notFound((c) => {
