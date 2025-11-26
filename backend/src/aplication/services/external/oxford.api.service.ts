@@ -19,11 +19,11 @@ export class OxfordApiService implements IBookService {
 
             return data.map((item: any) => ({
                 id: item.uuid,
-                name: item.bookTitle,
-                imageUrl: item.bookCover,
-                pdfUrl: item.pdfUrl,
+                titulo: item.bookTitle,
+                portadaBase64: item.bookCover,
+                pdfBase64: item.pdfUrl,
                 authorName: item.universidad,
-                description: item.genre,
+                genero: item.genre,
                 publishDate: new Date().toISOString().split('T')[0]
             }));
         } catch (error) {
@@ -46,11 +46,11 @@ export class OxfordApiService implements IBookService {
 
             return {
                 id: item.uuid,
-                name: item.bookTitle,
-                imageUrl: item.bookCover,
-                pdfUrl: item.pdfUrl,
+                titulo: item.bookTitle,
+                portadaBase64: item.bookCover,
+                pdfBase64: item.pdfUrl,
                 authorName: item.universidad,
-                description: item.genre,
+                genero: item.genre,
                 publishDate: new Date().toISOString().split('T')[0]
             };
         } catch (error) {
