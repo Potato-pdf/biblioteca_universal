@@ -12,21 +12,22 @@ export class BookCQRS implements IBookCQRS {
 
     async CreateBook(data: Book): Promise<boolean> {
         // Validaciones simples
-        if (!data.name || !data.authorName || !data.imageUrl || !data.pdfUrl) {
+        if (!data.titulo || !data.authorName || !data.portadaBase64 || !data.pdfBase64) {
             throw new Error("Datos incompletos para crear libro");
         }
 
-        // Validar que las URLs sean válidas
-        try {
-            new URL(data.imageUrl);
-            new URL(data.pdfUrl);
-        } catch {
-            throw new Error("URL de imagen o PDF inválida");
+        // Validar que sean cadenas Base64 válidas
+        const base64Regex = /^data:(image\/(png|jpg|jpeg|gif|webp)|application\/pdf);base64,([A-Za-z0-9+/=]+)$/;
+        if (!base64Regex.test(data.portadaBase64)) {
+            throw new Error("Formato de portada Base64 inválido");
+        }
+        if (!base64Regex.test(data.pdfBase64)) {
+            throw new Error("Formato de PDF Base64 inválido");
         }
 
-        // Validar descripción
-        if (data.description && data.description.length > 1000) {
-            throw new Error("La descripción no puede exceder 1000 caracteres");
+        // Validar género
+        if (data.genero && data.genero.length > 255) {
+            throw new Error("El género no puede exceder 255 caracteres");
         }
 
         // Generar ID
@@ -43,33 +44,35 @@ export class BookCQRS implements IBookCQRS {
 
     async UpdateBook(id: string, data: Book): Promise<boolean> {
         // Validaciones simples
-        if (!data.name && !data.authorName && !data.imageUrl && !data.pdfUrl) {
+        if (!data.titulo && !data.authorName && !data.portadaBase64 && !data.pdfBase64) {
             throw new Error("Debe proporcionar al menos un campo para actualizar");
         }
 
-        // Validar URLs si se proporcionan
-        if (data.imageUrl) {
-            try {
-                new URL(data.imageUrl);
-            } catch {
-                throw new Error("URL de imagen inválida");
+        // Validar Base64 si se proporcionan
+        const base64Regex = /^data:(image\/(png|jpg|jpeg|gif|webp)|application\/pdf);base64,([A-Za-z0-9+/=]+)$/;
+
+        if (data.portadaBase64) {
+            if (!base64Regex.test(data.portadaBase64)) {
+                throw new Error("Formato de portada Base64 inválido");
             }
         }
 
-        if (data.pdfUrl) {
-            try {
-                new URL(data.pdfUrl);
-            } catch {
-                throw new Error("URL de PDF inválida");
+        if (data.pdfBase64) {
+            if (!base64Regex.test(data.pdfBase64)) {
+                throw new Error("Formato de PDF Base64 inválido");
             }
         }
 
-        // Validar descripción si se proporciona
-        if (data.description && data.description.length > 1000) {
-            throw new Error("La descripción no puede exceder 1000 caracteres");
+        // Validar género si se proporciona
+        if (data.genero && data.genero.length > 255) {
+            throw new Error("El género no puede exceder 255 caracteres");
         }
 
         // Llamar al DAO para ejecutar el cambio
         return await this.bookDAO.updateLibro(id, data);
+    }
+
+    async DeleteBook(id: string): Promise<boolean> {
+        return await this.bookDAO.deleteLibro(id);
     }
 }
