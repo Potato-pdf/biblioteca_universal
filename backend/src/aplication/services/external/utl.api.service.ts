@@ -60,28 +60,28 @@ export class UtlApiService implements IBookService {
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
             const url = `${this.baseUrl}/books/search?title=${encodeURIComponent(title)}`;
-            console.log("🔍 Buscando en UTL:", url);
+            console.log(" Buscando en UTL:", url);
 
             const response = await fetch(url);
 
             if (!response.ok) {
-                console.error("❌ Error en la API de UTL:", response.statusText);
+                console.error("Error en la API de UTL:", response.statusText);
                 return [];
             }
 
             const data: any = await response.json();
 
             if (!Array.isArray(data)) {
-                console.warn("⚠️ La respuesta de UTL no es un array");
+                console.warn("La respuesta de UTL no es un array");
                 return [];
             }
 
             const books = data.map(externalBook => this.mapExternalBookToInternal(externalBook));
-            console.log(`✅ UTL retornó ${books.length} libros`);
+            console.log(` UTL retornó ${books.length} libros`);
 
             return books;
         } catch (error) {
-            console.error("❌ Error conectando con API UTL:", error);
+            console.error("Error conectando con API UTL:", error);
             return [];
         }
     }
@@ -89,23 +89,23 @@ export class UtlApiService implements IBookService {
     async getExternalBookById(id: string): Promise<book | null> {
         try {
             const url = `${this.baseUrl}/books/${id}`;
-            console.log("🔍 Obteniendo libro de UTL:", url);
+            console.log(" Obteniendo libro de UTL:", url);
 
             const response = await fetch(url);
 
             if (!response.ok) {
-                console.error("❌ Libro no encontrado en UTL");
+                console.error("Libro no encontrado en UTL");
                 return null;
             }
 
             const externalBook: any = await response.json();
 
             const book = this.mapExternalBookToInternal(externalBook);
-            console.log("✅ Libro obtenido de UTL:", book.titulo);
+            console.log("Libro obtenido de UTL:", book.titulo);
 
             return book;
         } catch (error) {
-            console.error("❌ Error obteniendo libro de UTL:", error);
+            console.error("Error obteniendo libro de UTL:", error);
             return null;
         }
     }
