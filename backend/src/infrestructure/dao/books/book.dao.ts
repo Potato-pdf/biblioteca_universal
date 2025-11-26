@@ -16,7 +16,7 @@ export class BookDAO implements IBookDAO {
 
     async buscarLibrosINternosPorTitulo(titulo: string): Promise<Book[]> {
         return await this.bookRepository.find({
-            where: { name: ILike(`%${titulo}%`) }
+            where: { titulo: ILike(`%${titulo}%`) }
         });
     }
 
