@@ -49,11 +49,11 @@ export class BookController {
             const data = await c.req.json();
 
             const book = new Book();
-            book.name = data.name;
+            book.titulo = data.titulo;
             book.authorName = data.authorName;
-            book.imageUrl = data.imageUrl;
-            book.pdfUrl = data.pdfUrl;
-            book.description = data.description || "";
+            book.portadaBase64 = data.portadaBase64;
+            book.pdfBase64 = data.pdfBase64;
+            book.genero = data.genero || "";
             book.publishDate = data.publishDate || new Date().toISOString().split('T')[0];
 
             const success = await this.bookCQRS.CreateBook(book);
@@ -77,11 +77,11 @@ export class BookController {
             const data = await c.req.json();
 
             const book = new Book();
-            if (data.name) book.name = data.name;
+            if (data.titulo) book.titulo = data.titulo;
             if (data.authorName) book.authorName = data.authorName;
-            if (data.imageUrl) book.imageUrl = data.imageUrl;
-            if (data.pdfUrl) book.pdfUrl = data.pdfUrl;
-            if (data.description) book.description = data.description;
+            if (data.portadaBase64) book.portadaBase64 = data.portadaBase64;
+            if (data.pdfBase64) book.pdfBase64 = data.pdfBase64;
+            if (data.genero) book.genero = data.genero;
             if (data.publishDate) book.publishDate = data.publishDate;
 
             const success = await this.bookCQRS.UpdateBook(id, book);
@@ -102,7 +102,7 @@ export class BookController {
     async eliminarLibro(c: Context) {
         try {
             const id = c.req.param("id");
-            const success = await this.bookDAO.deleteLibro(id);
+            const success = await this.bookCQRS.DeleteBook(id);
 
             if (success) {
                 return c.json({ success: true, message: "Libro eliminado exitosamente" });
