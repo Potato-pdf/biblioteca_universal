@@ -60,28 +60,28 @@ export class UnamApiService implements IBookService {
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
             const url = `${this.baseUrl}?busqueda=${encodeURIComponent(title)}`;
-            console.log("🔍 Buscando en UNAM:", url);
+            console.log(" Buscando en UNAM:", url);
 
             const response = await fetch(url);
 
             if (!response.ok) {
-                console.error("❌ Error en la API de UNAM:", response.statusText);
+                console.error("Error en la API de UNAM:", response.statusText);
                 return [];
             }
 
             const data = await response.json() as any[];
 
             if (!Array.isArray(data)) {
-                console.warn("⚠️ La respuesta de UNAM no es un array");
+                console.warn("La respuesta de UNAM no es un array");
                 return [];
             }
 
             const books = data.map(libro => this.mapExternalBookToInternal(libro));
-            console.log(`✅ UNAM retornó ${books.length} libros`);
+            console.log(`UNAM retornó ${books.length} libros`);
 
             return books;
         } catch (error) {
-            console.error("❌ Error conectando con API UNAM:", error);
+            console.error("Error conectando con API UNAM:", error);
             return [];
         }
     }
@@ -89,23 +89,23 @@ export class UnamApiService implements IBookService {
     async getExternalBookById(id: string): Promise<book | null> {
         try {
             const url = `${this.baseUrl}/${id}`;
-            console.log("🔍 Obteniendo libro de UNAM:", url);
+            console.log(" Obteniendo libro de UNAM:", url);
 
             const response = await fetch(url);
 
             if (!response.ok) {
-                console.error("❌ Libro no encontrado en UNAM");
+                console.error("Libro no encontrado en UNAM");
                 return null;
             }
 
             const libro: any = await response.json();
 
             const book = this.mapExternalBookToInternal(libro);
-            console.log("✅ Libro obtenido de UNAM:", book.titulo);
+            console.log("Libro obtenido de UNAM:", book.titulo);
 
             return book;
         } catch (error) {
-            console.error("❌ Error obteniendo libro de UNAM:", error);
+            console.error("Error obteniendo libro de UNAM:", error);
             return null;
         }
     }
