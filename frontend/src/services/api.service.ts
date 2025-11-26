@@ -10,11 +10,11 @@ export interface User {
 
 export interface Book {
     id?: string;
-    name: string;
+    titulo: string;
     authorName: string;
-    imageUrl: string;
-    pdfUrl: string;
-    description?: string;
+    portadaBase64: string;
+    pdfBase64: string;
+    genero?: string;
     publishDate?: string;
     university?: string;
 }
