@@ -22,37 +22,71 @@ export class SearchController {
         try {
             const filtro = c.req.query("q") || "";
 
-            if (!filtro) {
-                return c.json({ error: "Debe proporcionar un término de búsqueda" }, 400);
+            // ✅ PERMITIR búsqueda vacía para cargar TODOS los libros
+            console.log(`🔍 Buscando libros con filtro: "${filtro || '(vacío - todos los libros)'}"`);
+
+            // 1️⃣ BUSCAR EN BD LOCAL (siempre funciona)
+            let viewModelsInternos: BookViewModel[] = [];
+            try {
+                const librosInternos = filtro
+                    ? await this.bookDAO.buscarLibrosINternosPorTitulo(filtro)
+                    : await this.bookDAO.getAllLibrosInternos();
+
+                viewModelsInternos = librosInternos.map(libro =>
+                    BookViewModel.fromInternalBook(libro)
+                );
+                console.log(`✅ Libros internos: ${viewModelsInternos.length}`);
+            } catch (error) {
+                console.error("❌ Error cargando libros internos:", error);
             }
 
-            const librosInternos = await this.bookDAO.buscarLibrosINternosPorTitulo(filtro);
-            const viewModelsInternos = librosInternos.map(libro =>
-                BookViewModel.fromInternalBook(libro)
-            );
+            // 2️⃣ BUSCAR EN APIS EXTERNAS (con manejo individual de errores)
+            let viewModelsUtl: BookViewModel[] = [];
+            let viewModelsUnam: BookViewModel[] = [];
+            let viewModelsOxford: BookViewModel[] = [];
 
-            const [librosUtl, librosUnam, librosOxford] = await Promise.all([
-                this.utlService.searchExternalBooksByTitle(filtro),
-                this.unamService.searchExternalBooksByTitle(filtro),
-                this.oxfordService.searchExternalBooksByTitle(filtro)
-            ]);
+            // UTL - Si falla, continúa con las demás
+            try {
+                const librosUtl = await this.utlService.searchExternalBooksByTitle(filtro);
+                viewModelsUtl = librosUtl.map(libro =>
+                    BookViewModel.fromExternalBook(libro, "Universidad Tecnológica de León")
+                );
+                console.log(`✅ UTL: ${viewModelsUtl.length} libros`);
+            } catch (error) {
+                console.error("⚠️ UTL no disponible, continuando...", error);
+            }
 
-            const viewModelsUtl = librosUtl.map(libro =>
-                BookViewModel.fromExternalBook(libro, "Universidad Tecnológica de León")
-            );
-            const viewModelsUnam = librosUnam.map(libro =>
-                BookViewModel.fromExternalBook(libro, "Universidad Nacional Autónoma de México")
-            );
-            const viewModelsOxford = librosOxford.map(libro =>
-                BookViewModel.fromExternalBook(libro, "Oxford University")
-            );
+            // UNAM - Si falla, continúa con las demás
+            try {
+                const librosUnam = await this.unamService.searchExternalBooksByTitle(filtro);
+                viewModelsUnam = librosUnam.map(libro =>
+                    BookViewModel.fromExternalBook(libro, "Universidad Nacional Autónoma de México")
+                );
+                console.log(`✅ UNAM: ${viewModelsUnam.length} libros`);
+            } catch (error) {
+                console.error("⚠️ UNAM no disponible, continuando...", error);
+            }
 
+            // Oxford - Si falla, continúa
+            try {
+                const librosOxford = await this.oxfordService.searchExternalBooksByTitle(filtro);
+                viewModelsOxford = librosOxford.map(libro =>
+                    BookViewModel.fromExternalBook(libro, "Oxford University")
+                );
+                console.log(`✅ Oxford: ${viewModelsOxford.length} libros`);
+            } catch (error) {
+                console.error("⚠️ Oxford no disponible, continuando...", error);
+            }
+
+            // 3️⃣ UNIFICAR TODOS LOS RESULTADOS
             const todosLosLibros = [
                 ...viewModelsInternos,
                 ...viewModelsUtl,
                 ...viewModelsUnam,
                 ...viewModelsOxford
             ];
+
+            console.log(`📚 Total de libros encontrados: ${todosLosLibros.length}`);
 
             return c.json({
                 success: true,
@@ -68,7 +102,7 @@ export class SearchController {
                 }
             });
         } catch (error) {
-            console.error("Error en búsqueda:", error);
+            console.error("❌ Error general en búsqueda:", error);
             return c.json({ error: "Error al buscar libros" }, 500);
         }
     }

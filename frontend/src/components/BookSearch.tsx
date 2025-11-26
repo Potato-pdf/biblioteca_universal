@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api.service';
 import { BookViewModel } from '../viewmodels/book.viewmodel';
 import { ArrowLeft, Search, BookOpen } from 'lucide-react';
@@ -14,9 +14,34 @@ export const BookSearch: React.FC<BookSearchProps> = ({ onBack }) => {
     const [loading, setLoading] = useState(false);
     const [selectedBook, setSelectedBook] = useState<BookViewModel | null>(null);
 
+    // 🆕 CARGAR TODOS LOS LIBROS AL INICIO
+    useEffect(() => {
+        loadAllBooks();
+    }, []);
+
+    const loadAllBooks = async () => {
+        setLoading(true);
+        try {
+            // Llamar con query vacío para obtener TODOS los libros
+            const response = await apiService.searchBooks("");
+            if (response.success) {
+                setResults(response.data);
+                console.log(`📚 Libros cargados: ${response.data.length}`);
+            }
+        } catch (error) {
+            console.error('Error loading initial books:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!query.trim()) return;
+        if (!query.trim()) {
+            // Si la búsqueda está vacía, recargar todos
+            loadAllBooks();
+            return;
+        }
 
         setLoading(true);
         try {
