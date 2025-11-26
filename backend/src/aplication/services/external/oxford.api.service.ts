@@ -59,28 +59,28 @@ export class OxfordApiService implements IBookService {
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
         try {
             const url = `${this.baseUrl}?q=${encodeURIComponent(title)}`;
-            console.log("🔍 Buscando en Oxford/Cambridge:", url);
+            console.log("Buscando en Oxford/Cambridge:", url);
 
             const response = await fetch(url);
 
             if (!response.ok) {
-                console.error("❌ Error en la API de Oxford/Cambridge:", response.statusText);
+                console.error("Error en la API de Oxford/Cambridge:", response.statusText);
                 return [];
             }
 
             const data = await response.json() as any[];
 
             if (!Array.isArray(data)) {
-                console.warn("⚠️ La respuesta de Oxford/Cambridge no es un array");
+                console.warn("La respuesta de Oxford/Cambridge no es un array");
                 return [];
             }
 
             const books = data.map(item => this.mapExternalBookToInternal(item));
-            console.log(`✅ Oxford/Cambridge retornó ${books.length} libros`);
+            console.log(` Oxford/Cambridge retornó ${books.length} libros`);
 
             return books;
         } catch (error) {
-            console.error("❌ Error conectando con API Oxford/Cambridge:", error);
+            console.error("Error conectando con API Oxford/Cambridge:", error);
             return [];
         }
     }
@@ -88,23 +88,23 @@ export class OxfordApiService implements IBookService {
     async getExternalBookById(id: string): Promise<book | null> {
         try {
             const url = `${this.baseUrl}/${id}`;
-            console.log("🔍 Obteniendo libro de Oxford/Cambridge:", url);
+            console.log(" Obteniendo libro de Oxford/Cambridge:", url);
 
             const response = await fetch(url);
 
             if (!response.ok) {
-                console.error("❌ Libro no encontrado en Oxford/Cambridge");
+                console.error(" Libro no encontrado en Oxford/Cambridge");
                 return null;
             }
 
             const item: any = await response.json();
 
             const book = this.mapExternalBookToInternal(item);
-            console.log("✅ Libro obtenido de Oxford/Cambridge:", book.titulo);
+            console.log(" Libro obtenido de Oxford/Cambridge:", book.titulo);
 
             return book;
         } catch (error) {
-            console.error("❌ Error obteniendo libro de Oxford/Cambridge:", error);
+            console.error("Error obteniendo libro de Oxford/Cambridge:", error);
             return null;
         }
     }
