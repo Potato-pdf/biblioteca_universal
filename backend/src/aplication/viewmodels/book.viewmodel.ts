@@ -1,4 +1,4 @@
-import { book } from "../../../domain/interfaces/books/book.interface";
+import { book } from "../../domain/interfaces/books/book.interface";
 
 export class BookViewModel {
     idLibro: string;
