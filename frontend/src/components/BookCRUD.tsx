@@ -34,9 +34,7 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64String = reader.result as string;
-                // Remove data URL prefix if present for cleaner storage/transmission if backend expects raw base64
-                // But usually for display <img src="..."> we need the prefix.
-                // Assuming backend handles it or we store full string.
+                // Keep the full data URL with prefix
                 setCurrentBook(prev => ({ ...prev, [field]: base64String }));
             };
             reader.readAsDataURL(file);
@@ -71,16 +69,15 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
 
     const openModal = (book?: BookViewModel) => {
         if (book) {
-            // Map ViewModel to Book (DTO) for editing
-            // Note: This assumes the form uses 'titulo' but backend expects 'name'. 
-            // We might need to adjust this if the form is indeed sending 'titulo'.
-            // For now, we just map what we have to avoid type errors.
+            // Map ViewModel to Book for editing
             setCurrentBook({
                 id: book.idLibro,
-                name: book.titulo,
-                description: book.descripcion,
-                portadaUrl: book.portadaUrl,
-                pdfUrl: book.pdfUrl
+                titulo: book.titulo,
+                genero: book.descripcion,
+                portadaBase64: book.portadaUrl,
+                pdfBase64: book.pdfUrl,
+                authorName: book.autor,
+                publishDate: book.fechaPublicacion
             } as any);
             setIsEditing(true);
         } else {
@@ -151,18 +148,28 @@ export const BookCRUD: React.FC<BookCRUDProps> = ({ onBack }) => {
                                 <label className="block text-sm font-bold mb-2">Título</label>
                                 <input
                                     type="text"
-                                    value={currentBook.name || ''}
-                                    onChange={(e) => setCurrentBook({ ...currentBook, name: e.target.value })}
+                                    value={currentBook.titulo || ''}
+                                    onChange={(e) => setCurrentBook({ ...currentBook, titulo: e.target.value })}
                                     className="w-full p-2 border rounded"
                                     required
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-sm font-bold mb-2">Descripción</label>
+                                <label className="block text-sm font-bold mb-2">Autor</label>
                                 <input
                                     type="text"
-                                    value={currentBook.description || ''}
-                                    onChange={(e) => setCurrentBook({ ...currentBook, description: e.target.value })}
+                                    value={currentBook.authorName || ''}
+                                    onChange={(e) => setCurrentBook({ ...currentBook, authorName: e.target.value })}
+                                    className="w-full p-2 border rounded"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold mb-2">Género</label>
+                                <input
+                                    type="text"
+                                    value={currentBook.genero || ''}
+                                    onChange={(e) => setCurrentBook({ ...currentBook, genero: e.target.value })}
                                     className="w-full p-2 border rounded"
                                     required
                                 />
