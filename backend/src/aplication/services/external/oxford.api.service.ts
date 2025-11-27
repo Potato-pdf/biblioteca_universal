@@ -38,7 +38,15 @@ export class OxfordApiService implements IBookService {
     async getAllBooks(): Promise<book[]> {
         try {
             console.log("Obteniendo libros de Cambridge:", this.baseUrl);
-            const response = await fetch(this.baseUrl);
+
+            // Add 5-second timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(this.baseUrl, {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 console.error("Error en la API de Cambridge:", response.statusText);
@@ -56,8 +64,12 @@ export class OxfordApiService implements IBookService {
             console.log(`Cambridge retornó ${books.length} libros`);
 
             return books;
-        } catch (error) {
-            console.error("Error conectando con API Cambridge:", error);
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.error("Timeout conectando con API Cambridge (5s)");
+            } else {
+                console.error("Error conectando con API Cambridge:", error);
+            }
             return [];
         }
     }
