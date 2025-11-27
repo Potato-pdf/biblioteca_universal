@@ -63,6 +63,23 @@ export class BookController {
         }
     }
 
+    async listarLibrosInternos(c: Context) {
+        try {
+            console.log("Iniciando listarLibrosInternos (solo locales)...");
+
+            const internalBooks = await this.bookDAO.getAllLibrosInternos();
+            console.log(`Libros internos encontrados: ${internalBooks.length}`);
+
+            const viewModels = internalBooks.map(book => BookViewModel.fromInternalBook(book));
+
+            return c.json({ success: true, data: viewModels });
+        } catch (error) {
+            console.error("Error crítico listando libros internos:", error);
+            c.status(500)
+            return c.json({ error: "Error al obtener libros internos" });
+        }
+    }
+
     async obtenerLibro(c: Context) {
         try {
             const id = c.req.param("id");
