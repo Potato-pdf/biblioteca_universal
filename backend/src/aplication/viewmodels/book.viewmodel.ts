@@ -22,12 +22,34 @@ export class BookViewModel {
     }) {
         this.idLibro = data.id;
         this.titulo = data.titulo;
-        this.portadaUrl = data.portadaBase64;
-        this.pdfUrl = data.pdfBase64;
+        this.portadaUrl = BookViewModel.ensureBase64Prefix(data.portadaBase64, 'image');
+        this.pdfUrl = BookViewModel.ensureBase64Prefix(data.pdfBase64, 'pdf');
         this.autor = data.authorName;
         this.descripcion = data.genero;
         this.fechaPublicacion = data.publishDate;
         this.universidad = data.universidad || "𒊑";
+    }
+
+    private static ensureBase64Prefix(base64: string, type: 'image' | 'pdf'): string {
+        if (!base64) return "";
+
+        // Si ya tiene el prefijo data:, devolverlo tal cual
+        if (base64.startsWith('data:')) {
+            return base64;
+        }
+
+        // Si es una URL (http/https), devolverla tal cual
+        if (base64.startsWith('http://') || base64.startsWith('https://')) {
+            return base64;
+        }
+
+        // Si no tiene prefijo, agregarlo
+        if (type === 'image') {
+            // Detectar tipo de imagen (por defecto png)
+            return `data:image/png;base64,${base64}`;
+        } else {
+            return `data:application/pdf;base64,${base64}`;
+        }
     }
 
     static fromInternalBook(book: any): BookViewModel {
