@@ -22,89 +22,66 @@ export class OxfordApiService implements IBookService {
 
     /**
      * Mapea un libro externo al formato interno
-     * SOLO EDITA ESTA FUNCIÓN para adaptar a APIs reales
      */
     private mapExternalBookToInternal(externalBook: any): book {
-        // Determinar si usar Base64 o URL para la portada
-        const portada = externalBook.portadaBase64 ||
-            externalBook.bookCover ||
-            externalBook.portadaUrl ||
-            externalBook.imageUrl ||
-            "";
-
-        // Determinar si usar Base64 o URL para el PDF
-        const pdf = externalBook.pdfBase64 ||
-            externalBook.pdfUrl ||
-            externalBook.pdf ||
-            "";
-
         return {
             id: String(externalBook.uuid || externalBook.id || ""),
-            titulo: externalBook.bookTitle || externalBook.titulo || externalBook.title || "",
-            portadaBase64: portada,
-            pdfBase64: pdf,
-            authorName: externalBook.universidad ||
-                externalBook.universidadPropietaria ||
-                "Oxford/Cambridge",
-            genero: externalBook.genre ||
-                externalBook.genero ||
-                externalBook.generoLiterario ||
-                "",
-            publishDate: externalBook.publishDate ||
-                externalBook.fechaPublicacion ||
-                new Date().toISOString().split('T')[0]
+            titulo: externalBook.bookTitle || externalBook.titulo || "",
+            portadaBase64: externalBook.bookCover || externalBook.portadaBase64 || "",
+            pdfBase64: externalBook.pdfUrl || externalBook.pdfBase64 || "",
+            authorName: externalBook.universidad || "Cambridge",
+            genero: externalBook.genre || externalBook.genero || "",
+            publishDate: new Date().toISOString().split('T')[0] // Default date as not provided in example
         };
     }
 
-    async searchExternalBooksByTitle(title: string): Promise<book[]> {
+    async getAllBooks(): Promise<book[]> {
         try {
-            const url = `${this.baseUrl}?q=${encodeURIComponent(title)}`;
-            console.log("Buscando en Oxford/Cambridge:", url);
-
-            const response = await fetch(url);
+            console.log("Obteniendo libros de Cambridge:", this.baseUrl);
+            const response = await fetch(this.baseUrl);
 
             if (!response.ok) {
-                console.error("Error en la API de Oxford/Cambridge:", response.statusText);
+                console.error("Error en la API de Cambridge:", response.statusText);
                 return [];
             }
 
             const data = await response.json() as any[];
 
             if (!Array.isArray(data)) {
-                console.warn("La respuesta de Oxford/Cambridge no es un array");
+                console.warn("La respuesta de Cambridge no es un array");
                 return [];
             }
 
             const books = data.map(item => this.mapExternalBookToInternal(item));
-            console.log(` Oxford/Cambridge retornó ${books.length} libros`);
+            console.log(`Cambridge retornó ${books.length} libros`);
 
             return books;
         } catch (error) {
-            console.error("Error conectando con API Oxford/Cambridge:", error);
+            console.error("Error conectando con API Cambridge:", error);
+            return [];
+        }
+    }
+
+    async searchExternalBooksByTitle(title: string): Promise<book[]> {
+        // Since the URL provided is for getAll, we might need to filter manually or check if there is a search endpoint.
+        // For now, let's fetch all and filter, or just return empty if search is not supported by this specific URL.
+        // Assuming we can filter client-side for now as the URL is specific.
+        try {
+            const allBooks = await this.getAllBooks();
+            return allBooks.filter(b => b.titulo.toLowerCase().includes(title.toLowerCase()));
+        } catch (error) {
+            console.error("Error searching in Cambridge:", error);
             return [];
         }
     }
 
     async getExternalBookById(id: string): Promise<book | null> {
+        // Similarly, if there is no specific ID endpoint, we might need to fetch all and find.
         try {
-            const url = `${this.baseUrl}/${id}`;
-            console.log(" Obteniendo libro de Oxford/Cambridge:", url);
-
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                console.error(" Libro no encontrado en Oxford/Cambridge");
-                return null;
-            }
-
-            const item: any = await response.json();
-
-            const book = this.mapExternalBookToInternal(item);
-            console.log(" Libro obtenido de Oxford/Cambridge:", book.titulo);
-
-            return book;
+            const allBooks = await this.getAllBooks();
+            return allBooks.find(b => b.id === id) || null;
         } catch (error) {
-            console.error("Error obteniendo libro de Oxford/Cambridge:", error);
+            console.error("Error getting book by ID from Cambridge:", error);
             return null;
         }
     }
