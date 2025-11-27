@@ -34,19 +34,19 @@ export const useBookController = () => {
 
     const formDataToJson = async (formData: FormData) => {
         const data: any = {};
-        data.name = formData.get('titulo');
+        data.titulo = formData.get('titulo');
         data.authorName = formData.get('autor');
-        data.description = formData.get('descripcion');
+        data.genero = formData.get('descripcion');
         data.publishDate = formData.get('fechaPublicacion');
 
         const pdfFile = formData.get('pdf') as File;
         if (pdfFile && pdfFile.size > 0) {
-            data.pdfUrl = await fileToBase64(pdfFile);
+            data.pdfBase64 = await fileToBase64(pdfFile);
         }
 
         const coverFile = formData.get('portada') as File;
         if (coverFile && coverFile.size > 0) {
-            data.imageUrl = await fileToBase64(coverFile);
+            data.portadaBase64 = await fileToBase64(coverFile);
         }
 
         return data;
