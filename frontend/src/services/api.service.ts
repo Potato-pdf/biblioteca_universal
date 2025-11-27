@@ -67,6 +67,11 @@ export const apiService = {
         return response.json();
     },
 
+    getInternalBooks: async () => {
+        const response = await fetch(`${API_URL}/libros/internos`);
+        return response.json();
+    },
+
     createBook: async (book: any) => {
         const response = await fetch(`${API_URL}/libros/guardar`, {
             method: 'POST',

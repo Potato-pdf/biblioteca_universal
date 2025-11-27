@@ -45,7 +45,7 @@ export class BookViewModel {
 
     static fromExternalBook(book: book, universidad: string): BookViewModel {
         return new BookViewModel({
-            id: book.id,
+            id: `${universidad}-${book.id}`,
             titulo: book.titulo,
             portadaBase64: book.portadaBase64,
             pdfBase64: book.pdfBase64,

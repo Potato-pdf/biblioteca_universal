@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api.service';
 import type { BookViewModel } from '../viewmodels/book.viewmodel';
 
@@ -7,7 +7,7 @@ export const useBookController = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const loadBooks = async () => {
+    const loadBooks = useCallback(async () => {
         setLoading(true);
         setError(null);
 
@@ -21,7 +21,23 @@ export const useBookController = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    const loadInternalBooks = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await apiService.getInternalBooks();
+            setBooks(response.data);
+        } catch (err: any) {
+            const errorMsg = err.message || 'Error al cargar libros internos';
+            setError(errorMsg);
+            console.error('Error cargando libros internos:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -52,7 +68,7 @@ export const useBookController = () => {
         return data;
     };
 
-    const createBook = async (formData: FormData): Promise<boolean> => {
+    const createBook = useCallback(async (formData: FormData): Promise<boolean> => {
         setLoading(true);
         setError(null);
 
@@ -73,9 +89,9 @@ export const useBookController = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [loadBooks]);
 
-    const updateBook = async (id: string, formData: FormData): Promise<boolean> => {
+    const updateBook = useCallback(async (id: string, formData: FormData): Promise<boolean> => {
         setLoading(true);
         setError(null);
 
@@ -95,9 +111,9 @@ export const useBookController = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [loadBooks]);
 
-    const deleteBook = async (id: string): Promise<boolean> => {
+    const deleteBook = useCallback(async (id: string): Promise<boolean> => {
         setLoading(true);
         setError(null);
 
@@ -117,11 +133,12 @@ export const useBookController = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     return {
         books,
         loadBooks,
+        loadInternalBooks,
         createBook,
         updateBook,
         deleteBook,
