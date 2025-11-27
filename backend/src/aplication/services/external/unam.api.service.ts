@@ -24,45 +24,23 @@ export class UnamApiService implements IBookService {
 
     /**
      * Mapea un libro externo al formato interno
-     * SOLO EDITA ESTA FUNCIÓN para adaptar a APIs reales
      */
     private mapExternalBookToInternal(externalBook: any): book {
-        // Determinar si usar Base64 o URL para la portada
-        const portada = externalBook.portadaBase64 ||
-            externalBook.portadaUrl ||
-            externalBook.imageUrl ||
-            "";
-
-        // Determinar si usar Base64 o URL para el PDF
-        const pdf = externalBook.pdfBase64 ||
-            externalBook.pdfUrl ||
-            externalBook.pdf ||
-            "";
-
         return {
             id: String(externalBook.id || externalBook.uuid || ""),
             titulo: externalBook.titulo || externalBook.title || "",
-            portadaBase64: portada,
-            pdfBase64: pdf,
-            authorName: externalBook.universidadPropietaria ||
-                externalBook.universidad ||
-                "UNAM",
-            genero: externalBook.generoLiterario ||
-                externalBook.genero ||
-                externalBook.genre ||
-                "",
-            publishDate: externalBook.publishDate ||
-                externalBook.fechaPublicacion ||
-                new Date().toISOString().split('T')[0]
+            portadaBase64: externalBook.portadaBase64 || externalBook.portadaUrl || "",
+            pdfBase64: externalBook.pdfBase64 || externalBook.pdfUrl || "",
+            authorName: externalBook.universidadPropietaria || externalBook.universidad || "UNAM",
+            genero: externalBook.generoLiterario || externalBook.genero || "",
+            publishDate: externalBook.fechaPublicacion || new Date().toISOString().split('T')[0]
         };
     }
 
-    async searchExternalBooksByTitle(title: string): Promise<book[]> {
+    async getAllBooks(): Promise<book[]> {
         try {
-            const url = `${this.baseUrl}?busqueda=${encodeURIComponent(title)}`;
-            console.log(" Buscando en UNAM:", url);
-
-            const response = await fetch(url);
+            console.log("Obteniendo libros de UNAM:", this.baseUrl);
+            const response = await fetch(this.baseUrl);
 
             if (!response.ok) {
                 console.error("Error en la API de UNAM:", response.statusText);
@@ -86,24 +64,20 @@ export class UnamApiService implements IBookService {
         }
     }
 
+    async searchExternalBooksByTitle(title: string): Promise<book[]> {
+        try {
+            const allBooks = await this.getAllBooks();
+            return allBooks.filter(b => b.titulo.toLowerCase().includes(title.toLowerCase()));
+        } catch (error) {
+            console.error("Error conectando con API UNAM:", error);
+            return [];
+        }
+    }
+
     async getExternalBookById(id: string): Promise<book | null> {
         try {
-            const url = `${this.baseUrl}/${id}`;
-            console.log(" Obteniendo libro de UNAM:", url);
-
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                console.error("Libro no encontrado en UNAM");
-                return null;
-            }
-
-            const libro: any = await response.json();
-
-            const book = this.mapExternalBookToInternal(libro);
-            console.log("Libro obtenido de UNAM:", book.titulo);
-
-            return book;
+            const allBooks = await this.getAllBooks();
+            return allBooks.find(b => b.id === id) || null;
         } catch (error) {
             console.error("Error obteniendo libro de UNAM:", error);
             return null;
