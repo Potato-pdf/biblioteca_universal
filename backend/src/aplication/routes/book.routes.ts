@@ -4,8 +4,11 @@ import { BookController } from "../controllers/book.controller";
 const bookRouter = new Hono();
 const bookController = new BookController();
 
-// GET /libros - Listar todos los libros
+// GET /libros - Listar todos los libros (locales + externos)
 bookRouter.get("/", (c) => bookController.listarLibros(c));
+
+// GET /libros/internos - Listar solo libros internos/locales (para admin)
+bookRouter.get("/internos", (c) => bookController.listarLibrosInternos(c));
 
 // GET /libros/:id - Obtener un libro por ID
 bookRouter.get("/:id", (c) => bookController.obtenerLibro(c));
