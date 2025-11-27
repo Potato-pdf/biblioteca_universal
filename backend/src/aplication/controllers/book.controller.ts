@@ -3,6 +3,8 @@ import { BookDAO } from "../../infrestructure/dao/books/book.dao";
 import { BookCQRS } from "../../infrestructure/cqrs/books/book.cqrs";
 import { BookViewModel } from "../viewmodels/book.viewmodel";
 import { Book } from "../../domain/models/books/book.model";
+import { OxfordApiService } from "../services/external/oxford.api.service";
+import { UnamApiService } from "../services/external/unam.api.service";
 
 export class BookController {
     private bookDAO: BookDAO;
@@ -15,11 +17,47 @@ export class BookController {
 
     async listarLibros(c: Context) {
         try {
-            const books = await this.bookDAO.getAllLibrosInternos();
-            const viewModels = books.map(book => BookViewModel.fromInternalBook(book));
-            return c.json({ success: true, data: viewModels });
+            console.log("Iniciando listarLibros...");
+
+            const [internalResult, oxfordResult, unamResult] = await Promise.allSettled([
+                this.bookDAO.getAllLibrosInternos(),
+                new OxfordApiService().getAllBooks(),
+                new UnamApiService().getAllBooks()
+            ]);
+
+            let allBooks: BookViewModel[] = [];
+
+            // 1. Procesar libros internos
+            if (internalResult.status === 'fulfilled') {
+                console.log(`Libros internos encontrados: ${internalResult.value.length}`);
+                const internalViewModels = internalResult.value.map(book => BookViewModel.fromInternalBook(book));
+                allBooks = [...allBooks, ...internalViewModels];
+            } else {
+                console.error("Error obteniendo libros internos:", internalResult.reason);
+            }
+
+            // 2. Procesar libros externos (Cambridge)
+            if (oxfordResult.status === 'fulfilled') {
+                console.log(`Libros Cambridge encontrados: ${oxfordResult.value.length}`);
+                const oxfordViewModels = oxfordResult.value.map(book => BookViewModel.fromExternalBook(book, "Cambridge"));
+                allBooks = [...allBooks, ...oxfordViewModels];
+            } else {
+                console.error("Error obteniendo libros de Cambridge:", oxfordResult.reason);
+            }
+
+            // 3. Procesar libros externos (UNAM/UTL)
+            if (unamResult.status === 'fulfilled') {
+                console.log(`Libros UNAM encontrados: ${unamResult.value.length}`);
+                const unamViewModels = unamResult.value.map(book => BookViewModel.fromExternalBook(book, "UNAM"));
+                allBooks = [...allBooks, ...unamViewModels];
+            } else {
+                console.error("Error obteniendo libros de UNAM:", unamResult.reason);
+            }
+
+            console.log(`Total de libros a retornar: ${allBooks.length}`);
+            return c.json({ success: true, data: allBooks });
         } catch (error) {
-            console.error("Error listando libros:", error);
+            console.error("Error crítico listando libros:", error);
             c.status(500)
             return c.json({ error: "Error al obtener libros" });
         }
