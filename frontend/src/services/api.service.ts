@@ -1,4 +1,4 @@
-const API_URL = 'http://192.168.137.206:3000';
+const API_URL = 'http://192.168.137.87:3000';
 
 export interface User {
     id?: number;
