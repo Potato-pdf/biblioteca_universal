@@ -1,22 +1,6 @@
 import { book } from "../../../domain/interfaces/books/book.interface";
 import { IBookService } from "../../../domain/interfaces/external/books.external.interface";
 
-/**
- * Oxford/Cambridge API Service
- * 
- * Estructura JSON esperada de la API:
- * {
- *   uuid: string | id: string,
- *   bookTitle: string | titulo: string,
- *   bookCover: string | portadaBase64: string | portadaUrl: string,
- *   pdfUrl: string | pdfBase64: string,
- *   universidad: string,
- *   genre: string | genero: string
- * }
- * 
- * Si necesitas adaptar a una API real, solo cambia los nombres de campos
- * en la función mapExternalBookToInternal()
- */
 export class OxfordApiService implements IBookService {
     private baseUrl = "http://192.168.137.1:8079/Cambridge/biblioteca/libro/getAllLibro";
 
