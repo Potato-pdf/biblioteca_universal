@@ -1,24 +1,6 @@
 import { book } from "../../../domain/interfaces/books/book.interface";
 import { IBookService } from "../../../domain/interfaces/external/books.external.interface";
 
-/**
- * UTL (Universidad Tecnológica de León) API Service
- * 
- * Estructura JSON esperada de la API:
- * {
- *   id: string | number,
-*   titulo: string,
- *   portadaBase64?: string,      // Base64 de la imagen
- *   portadaUrl?: string,         // O URL de la imagen
- *   pdfBase64?: string,          // Base64 del PDF
- *   pdfUrl?: string,             // O URL del PDF
- *   universidadPropietaria: string,
- *   generoLiterario: string
- * }
- * 
- * Si necesitas adaptar a una API real, solo cambia los nombres de campos
- * en la función mapExternalBookToInternal()
- */
 export class UtlApiService implements IBookService {
     private baseUrl = "https://api-utl-books.example.com";
 

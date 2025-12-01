@@ -1,565 +1,640 @@
-# 📚 Biblioteca Universal - Documentación de Cumplimiento Arquitectónico
+# 📚 Biblioteca Universal - Documentación de Flujos
 
-## 🎯 Objetivo General
+## 🎯 Descripción del Proyecto
 
 Plataforma que permite a estudiantes buscar libros de múltiples universidades y visualizar PDFs, combinando:
 - **Libros internos** (base de datos local)
 - **Libros externos** (APIs de otras universidades)
 
-**✅ Estado:** Proyecto implementado cumpliendo 100% con los requisitos arquitectónicos especificados.
+**Arquitectura:** Clean Architecture con MVC + DAO + CQRS + MVVM + DDD
 
 ---
 
-## 📋 Tabla de Contenidos
+## 📊 Tabla de Contenidos
 
-1. [Arquitectura Backend](#arquitectura-backend)
-2. [Arquitectura Frontend](#arquitectura-frontend)
-3. [Base de Datos](#base-de-datos)
-4. [Integración entre Universidades](#integración-entre-universidades)
-5. [Verificación de Cumplimiento](#verificación-de-cumplimiento)
-
----
-
-## 🏗️ Arquitectura Backend
-
-### 🔐 1. Login (MVC + DAO)
-
-**Requisitos:**
-- ✅ Validar credenciales
-- ✅ Detectar rol (Bibliotecario/Alumno)
-- ✅ Permitir acceso solo a secciones correspondientes
-- ✅ No permitir visualizar usuarios externos
-
-**Implementación:**
-
-#### Controller (MVC)
-**Archivo:** [`auth.controller.ts`](backend/src/aplication/controllers/auth.controller.ts)
-```typescript
-export class AuthController {
-    async login(c: Context) {
-        const { email, password } = await c.req.json();
-        
-        // Usar DAO para consultar
-        const user = await this.userDAO.findBYCredenciales(email);
-        
-        // Validar contraseña
-        const isValid = await Bun.password.verify(password, user.password);
-        
-        // Retornar usuario con rol
-        return c.json({
-            success: true,
-            data: {
-                id: user.id,
-                name: user.name,
-                rol: user.rol  // ← Detecta rol
-            }
-        });
-    }
-}
-```
-
-#### DAO (Solo Consultas)
-**Archivo:** [`user.dao.ts`](backend/src/infrestructure/dao/users/user.dao.ts)
-```typescript
-export class UserDAO {
-    // ✅ Solo consulta SQL
-    async findBYCredenciales(email: string): Promise<User | null> {
-        return await this.userRepository.findOne({ where: { email } });
-    }
-}
-```
-
-**✅ Cumple:** Patrón MVC + DAO, sin lógica en lugares incorrectos.
+1. [Flujo 1: Búsqueda Universal de Libros](#flujo-1-búsqueda-universal-de-libros)
+2. [Flujo 2: Separación Libros Internos vs Externos](#flujo-2-separación-libros-internos-vs-externos)
+3. [Flujo 3: Mostrar Libros Internos](#flujo-3-mostrar-libros-internos)
+4. [Flujo 4: Mostrar Libros Externos](#flujo-4-mostrar-libros-externos)
+5. [Flujo 5: Transformación a Base64](#flujo-5-transformación-a-base64)
+6. [Flujo 6: CRUD Completo de Libros](#flujo-6-crud-completo-de-libros-internos)
+7. [Flujo 7: Visualización de PDFs](#flujo-7-visualización-de-pdfs)
 
 ---
 
-### 👤 2. CRUD de Usuarios (MVC + DAO + CQRS + MVVM)
+## 🔍 FLUJO 1: BÚSQUEDA UNIVERSAL DE LIBROS
 
-**Requisitos:**
-- ✅ Listar usuarios
-- ✅ Registrar usuarios
-- ✅ Editar usuarios
-- ✅ DAO solo consultas
-- ✅ CQRS solo comandos
-- ✅ ViewModel solo mapeo
-- ✅ Controller orquesta
+### Archivos implicados:
+- **Frontend:** `BookSearch.tsx`
+- **Backend:** `search.controller.ts`
+- **Servicios:** `utl.api.service.ts`, `unam.api.service.ts`, `oxford.api.service.ts`
+- **DAO:** `book.dao.ts`
+- **ViewModel:** `book.viewmodel.ts`
 
-**Implementación:**
+### Diagrama de flujo:
 
-#### DAO - Solo Consultas
-**Archivo:** [`user.dao.ts`](backend/src/infrestructure/dao/users/user.dao.ts)
-```typescript
-export class UserDAO {
-    // ✅ CONSULTA: Obtener todos
-    async getAllUsuarios(): Promise<User[]> {
-        return await this.userRepository.find();
-    }
-    
-    // ✅ CONSULTA: Obtener por ID
-    async getUsuarioById(id: string): Promise<User | null> {
-        return await this.userRepository.findOneBy({ id });
-    }
-}
+```
+┌─────────────────┐
+│ 1. USUARIO      │
+│ Frontend        │
+└────────┬────────┘
+         │
+         │ 1.1 useEffect() carga inicial
+         │ loadAllBooks() → apiService.searchBooks("")
+         │
+         ▼
+┌─────────────────────────────────┐
+│ 2. SEARCH CONTROLLER            │
+│ buscarLibros(c: Context)        │
+└────────┬────────────────────────┘
+         │
+         │ 2.1 Recibe query (vacío o con texto)
+         │
+         ├─────────────────────┬──────────────────┬──────────────────┐
+         │                     │                  │                  │
+         ▼                     ▼                  ▼                  ▼
+┌───────────────┐    ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ 3. BD INTERNA │    │ 4. API UTL   │   │ 5. API UNAM  │   │ 6. API       │
+│ BookDAO       │    │ UtlApiService│   │ UnamApiService│   │ OXFORD       │
+└───────┬───────┘    └──────┬───────┘   └──────┬───────┘   └──────┬───────┘
+        │                   │                   │                   │
+        │ getAllLibros()    │ search()          │ getAllBooks()    │ getAllBooks()
+        │ o buscarPor       │                   │ + filter         │ + filter
+        │ Titulo()          │                   │                   │
+        │                   │                   │                   │
+        ▼                   ▼                   ▼                   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ 7. TRANSFORMACIÓN A VIEWMODEL                                       │
+│ BookViewModel.fromInternalBook(book)                                │
+│ BookViewModel.fromExternalBook(book, universidad)                   │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+                               │ 7.1 Unificación de resultados
+                               │ [...internos, ...utl, ...unam, ...oxford]
+                               │
+                               ▼
+┌─────────────────────────────────────┐
+│ 8. RESPUESTA JSON                   │
+│ {                                   │
+│   success: true,                    │
+│   data: BookViewModel[],            │
+│   stats: {                          │
+│     internos: 5,                    │
+│     externos: {                     │
+│       utl: 10,                      │
+│       unam: 8,                      │
+│       oxford: 12                    │
+│     },                              │
+│     total: 35                       │
+│   }                                 │
+│ }                                   │
+└─────────────────────────────────────┘
 ```
 
-#### CQRS - Solo Comandos
-**Archivo:** [`user.cqrs.ts`](backend/src/infrestructure/cqrs/users/user.cqrs.ts)
+### Métodos clave:
+
+**SearchController.buscarLibros()**
 ```typescript
-export class UserCQRS {
-    // ✅ COMANDO: Crear
-    async CreateUser(data: User): Promise<boolean> {
-        // Validaciones
-        if (!data.name || !data.email) {
-            throw new Error("Datos incompletos");
-        }
-        // Hash de contraseña
-        data.password = await Bun.password.hash(data.password);
-        // Delegar a DAO para INSERT
-        return await this.userDAO.insertUsuario(data);
-    }
+async buscarLibros(c: Context) {
+    const filtro = c.req.query("q") || "";
     
-    // ✅ COMANDO: Actualizar
-    async UpdateUser(id: string, data: User): Promise<boolean> {
-        return await this.userDAO.updateUsuario(id, data);
-    }
+    // 1. Buscar en BD interna
+    const librosInternos = filtro 
+        ? await this.bookDAO.buscarLibrosINternosPorTitulo(filtro)
+        : await this.bookDAO.getAllLibrosInternos();
     
-    // ✅ COMANDO: Eliminar
-    async DeleteUser(id: string): Promise<boolean> {
-        return await this.userDAO.deleteUsuario(id);
-    }
+    // 2. Buscar en APIs externas (paralelo con manejo individual de errores)
+    const [librosUtl, librosUnam, librosOxford] = await Promise.allSettled([...]);
+    
+    // 3. Transformar a ViewModels
+    const viewModelsInternos = librosInternos.map(libro => 
+        BookViewModel.fromInternalBook(libro)
+    );
+    
+    // 4. Unificar todos los resultados
+    const todosLosLibros = [...viewModelsInternos, ...viewModelsUtl, ...];
+    
+    return c.json({ success: true, data: todosLosLibros, stats: {...} });
 }
 ```
-
-#### ViewModel - Solo Mapeo
-**Archivo:** [`user.viewmodel.ts`](backend/src/aplication/viewmodels/user.viewmodel.ts)
-```typescript
-export class UserViewModel {
-    // ✅ Solo propiedades para UI
-    idUsuario: string;
-    nombre: string;
-    correo: string;
-    rol: string;
-    
-    // ✅ Sin lógica, solo mapeo
-    constructor(user: User) {
-        this.idUsuario = user.id;
-        this.nombre = user.name;
-        this.correo = user.email;
-        this.rol = user.rol;
-    }
-}
-```
-
-#### Controller - Orquestador
-**Archivo:** [`user.controller.ts`](backend/src/aplication/controllers/user.controller.ts)
-```typescript
-export class UserController {
-    // ✅ Listar: Usa DAO (consulta) + ViewModel (mapeo)
-    async getAllusers(c: Context) {
-        const users = await this.userDAO.getAllUsuarios();
-        const viewModels = users.map(u => new UserViewModel(u));
-        return c.json({ success: true, data: viewModels });
-    }
-    
-    // ✅ Crear: Usa CQRS (comando)
-    async guardarUsuarios(c: Context) {
-        const data = await c.req.json();
-        const user = new User();
-        user.name = data.name;
-        user.email = data.email;
-        user.rol = data.rol;
-        user.password = data.password;
-        
-        const success = await this.userCQRS.CreateUser(user);
-        return c.json({ success });
-    }
-    
-    // ✅ Actualizar: Usa CQRS (comando)
-    async editarUsuario(c: Context) {
-        const id = c.req.param("id");
-        const data = await c.req.json();
-        const success = await this.userCQRS.UpdateUser(id, data);
-        return c.json({ success });
-    }
-}
-```
-
-**✅ Cumple:** Separación perfecta DAO/CQRS/MVVM.
 
 ---
 
-### 📚 3. CRUD de Libros (MVC + DAO + CQRS + MVVM)
+## 🏢 FLUJO 2: SEPARACIÓN LIBROS INTERNOS VS EXTERNOS
 
-**Requisitos:**
-- ✅ Consultar libros internos
-- ✅ Registrar libros internos
-- ✅ Editar libros internos
-- ✅ Archivos en Base64 (portada y PDF)
+### Diferenciación:
 
-**Implementación:**
+#### **Libros INTERNOS:**
+```
+Origen: PostgreSQL local
+DAO: BookDAO
+Métodos:
+  - getAllLibrosInternos(): Promise<Book[]>
+  - getLIbroInternoById(id: string): Promise<Book | null>
+  - buscarLibrosINternosPorTitulo(titulo: string): Promise<Book[]>
 
-#### Modelo con Base64
-**Archivo:** [`book.model.ts`](backend/src/domain/models/books/book.model.ts)
-```typescript
-@Entity()
-export class Book {
-    @PrimaryColumn("uuid")
-    id!: string;
-    
-    @Column("varchar", { length: 500 })
-    titulo!: string;
-    
-    @Column("text")
-    portadaBase64!: string;  // ✅ Base64
-    
-    @Column("text")
-    pdfBase64!: string;      // ✅ Base64
-    
-    @Column("varchar", { length: 255 })
-    genero!: string;
-}
+Transformación:
+  BookViewModel.fromInternalBook(book)
+  → universidad = "𒊑" (símbolo local)
 ```
 
-#### CQRS con Validación Base64
-**Archivo:** [`book.cqrs.ts`](backend/src/infrestructure/cqrs/books/book.cqrs.ts)
-```typescript
-export class BookCQRS {
-    async CreateBook(data: Book): Promise<boolean> {
-        // ✅ Validar formato Base64
-        const base64Regex = /^data:(image|application\/pdf);base64,/;
-        
-        if (!base64Regex.test(data.portadaBase64)) {
-            throw new Error("Formato de portada Base64 inválido");
-        }
-        
-        if (!base64Regex.test(data.pdfBase64)) {
-            throw new Error("Formato de PDF Base64 inválido");
-        }
-        
-        data.id = randomUUID();
-        return await this.bookDAO.insertLibro(data);
-    }
-}
+#### **Libros EXTERNOS:**
+```
+Origen: APIs REST (UTL, UNAM, Oxford)
+Servicios: UtlApiService, UnamApiService, OxfordApiService
+Métodos:
+  - searchExternalBooksByTitle(title: string): Promise<book[]>
+  - getExternalBookById(id: string): Promise<book | null>
+
+Transformación:
+  BookViewModel.fromExternalBook(book, universidad)
+  → universidad = "Universidad Tecnológica de León" | "UNAM" | "Oxford"
 ```
 
-**✅ Cumple:** Todo en Base64, patrones respetados.
+### Tabla comparativa:
+
+| Característica | Internos | Externos |
+|----------------|----------|----------|
+| **Fuente** | PostgreSQL local | APIs REST |
+| **Disponibilidad** | Siempre disponible | Depende de red/API |
+| **Manejo errores** | Error fatal si falla | Continúa con otras fuentes |
+| **Universidad** | "𒊑" | Nombre de la universidad |
+| **CRUD** | Completo (C, R, U, D) | Solo READ |
+| **Timeout** | N/A | 5 segundos |
 
 ---
 
-### 🔎 4. Buscador de Libros (MVC + DAO + MVVM + DDD)
+## 📖 FLUJO 3: MOSTRAR LIBROS INTERNOS
 
-**Requisitos:**
-- ✅ Combinar libros internos y externos
-- ✅ DAO busca internos
-- ✅ ApiService (DDD) busca externos
-- ✅ Unificar resultados
-- ✅ Mapear a ViewModels
+### Archivos implicados:
+- **Controller:** `book.controller.ts`
+- **DAO:** `book.dao.ts`
+- **Model:** `book.model.ts`
+- **ViewModel:** `book.viewmodel.ts`
 
-**Implementación:**
+### Diagrama de flujo:
 
-#### Controller - Orquestador Central
-**Archivo:** [`search.controller.ts`](backend/src/aplication/controllers/search.controller.ts)
-```typescript
-export class SearchController {
-    private bookDAO: BookDAO;              // ← Local
-    private utlService: UtlApiService;     // ← DDD
-    private unamService: UnamApiService;   // ← DDD
-    private oxfordService: OxfordApiService; // ← DDD
-    
-    async buscarLibros(c: Context) {
-        const filtro = c.req.query("q") || "";
-        
-        // 1️⃣ BUSCAR INTERNOS (DAO)
-        const librosInternos = filtro
-            ? await this.bookDAO.buscarLibrosINternosPorTitulo(filtro)
-            : await this.bookDAO.getAllLibrosInternos();
-        
-        // 2️⃣ BUSCAR EXTERNOS (DDD - APIs)
-        const [librosUtl, librosUnam, librosOxford] = await Promise.all([
-            this.utlService.searchExternalBooksByTitle(filtro),
-            this.unamService.searchExternalBooksByTitle(filtro),
-            this.oxfordService.searchExternalBooksByTitle(filtro)
-        ]);
-        
-        // 3️⃣ MAPEAR A VIEWMODELS (MVVM)
-        const viewModelsInternos = librosInternos.map(libro =>
-            BookViewModel.fromInternalBook(libro)
-        );
-        
-        const viewModelsUnam = librosUnam.map(libro =>
-            BookViewModel.fromExternalBook(libro, "UNAM")
-        );
-        
-        // 4️⃣ UNIFICAR
-        const todosLosLibros = [
-            ...viewModelsInternos,
-            ...viewModelsUtl,
-            ...viewModelsUnam,
-            ...viewModelsOxford
-        ];
-        
-        return c.json({ success: true, data: todosLosLibros });
-    }
-}
 ```
-
-**✅ Cumple:** Patrón MVC + DAO + MVVM + DDD implementado correctamente.
+┌──────────────────┐
+│ GET /api/books   │
+└────────┬─────────┘
+         │
+         ▼
+┌────────────────────────┐
+│ BookController         │
+│ listarLibros()         │
+└────────┬───────────────┘
+         │
+         ▼
+┌────────────────────────┐
+│ BookDAO                │
+│ getAllLibrosInternos() │
+└────────┬───────────────┘
+         │
+         │ TypeORM query
+         │
+         ▼
+┌────────────────────────┐
+│ PostgreSQL Database    │
+│ SELECT * FROM book     │
+└────────┬───────────────┘
+         │
+         │ Book[] entities
+         │
+         ▼
+┌────────────────────────────────┐
+│ BookViewModel.fromInternalBook │
+│ Transformación ViewModel       │
+└────────┬───────────────────────┘
+         │
+         ▼
+┌────────────────────────────────┐
+│ Response JSON                  │
+│ {                              │
+│   success: true,               │
+│   data: [                      │
+│     {                          │
+│       idLibro: "uuid",         │
+│       titulo: "...",           │
+│       portadaUrl: "data:...",  │
+│       pdfUrl: "data:...",      │
+│       autor: "...",            │
+│       universidad: "𒊑"        │
+│     }                          │
+│   ]                            │
+│ }                              │
+└────────────────────────────────┘
+```
 
 ---
 
-## 🌐 Integración entre Universidades (DDD)
+## 🌐 FLUJO 4: MOSTRAR LIBROS EXTERNOS
 
-### ApiService por Universidad
+### Archivos implicados:
+- **Services:** `utl.api.service.ts`, `unam.api.service.ts`, `oxford.api.service.ts`
+- **Interface:** `books.external.interface.d.ts`
+- **ViewModel:** `book.viewmodel.ts`
 
-#### UTL
-**Archivo:** [`utl.api.service.ts`](backend/src/aplication/services/external/utl.api.service.ts)
+### Diagrama de flujo (Ejemplo: UnamApiService):
 
-#### UNAM
-**Archivo:** [`unam.api.service.ts`](backend/src/aplication/services/external/unam.api.service.ts)
+```
+┌──────────────────────────────────┐
+│ UnamApiService                   │
+│ searchExternalBooksByTitle()     │
+└────────┬─────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────┐
+│ 1. getAllBooks()                 │
+│ - Timeout: 5 segundos            │
+│ - AbortController                │
+└────────┬─────────────────────────┘
+         │
+         │ HTTP GET
+         │ http://192.168.137.11:3003/api/libros
+         │
+         ▼
+┌──────────────────────────────────┐
+│ 2. API Externa (UNAM)            │
+│ Retorna JSON array               │
+└────────┬─────────────────────────┘
+         │
+         │ [{id, titulo, portadaBase64, ...}, ...]
+         │
+         ▼
+┌──────────────────────────────────┐
+│ 3. mapExternalBookToInternal()   │
+│ MAPEO DE CAMPOS                  │
+└────────┬─────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────┐
+│ 4. Filtrado client-side          │
+│ .filter(b => b.titulo.includes() │
+└────────┬─────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────┐
+│ 5. Return book[]                 │
+└──────────────────────────────────┘
+```
 
-#### Oxford
-**Archivo:** [`oxford.api.service.ts`](backend/src/aplication/services/external/oxford.api.service.ts)
+### Mapeo de campos externos:
 
-**Estructura común:**
 ```typescript
-export class UnamApiService implements IBookService {
-    private baseUrl = "http://api.unam.mx/libros";
-    
-    // ✅ Buscar libros externos
-    async searchExternalBooksByTitle(title: string): Promise<book[]> {
-        const response = await fetch(`${this.baseUrl}?busqueda=${title}`);
-        const data = await response.json();
-        return data.map(libro => this.mapExternalBookToInternal(libro));
-    }
-    
-    // ✅ Obtener PDF externo
-    async getExternalBookById(id: string): Promise<book | null> {
-        const response = await fetch(`${this.baseUrl}/${id}`);
-        const libro = await response.json();
-        return this.mapExternalBookToInternal(libro);
-    }
-    
-    // ✅ Mapeo flexible (Base64 o URL)
-    private mapExternalBookToInternal(externalBook: any): book {
-        return {
-            id: externalBook.id,
-            titulo: externalBook.titulo,
-            portadaBase64: externalBook.portadaBase64 || externalBook.portadaUrl,
-            pdfBase64: externalBook.pdfBase64 || externalBook.pdfUrl,
-            authorName: externalBook.universidadPropietaria,
-            genero: externalBook.generoLiterario,
-            publishDate: externalBook.publishDate
+private mapExternalBookToInternal(externalBook: any): book {
+    return {
+        id: String(externalBook.id || externalBook.uuid || `unam-${Date.now()}`),
+        titulo: externalBook.titulo || externalBook.title || "",
+        portadaBase64: externalBook.portadaBase64 || 
+                       externalBook.portadaUrl || "",
+        pdfBase64: externalBook.pdfBase64 || 
+                   externalBook.pdfUrl || "",
+        authorName: externalBook.universidadPropietaria || "UNAM",
+        genero: externalBook.generoLiterario || "",
+        publishDate: externalBook.publishDate || new Date().toISOString()
+    };
+}
+```
+
+---
+
+## 🔄 FLUJO 5: TRANSFORMACIÓN A BASE64
+
+### Archivos implicados:
+- **Frontend:** `BookCRUD.tsx`
+- **Método:** `handleFileChange()`
+
+### Diagrama de flujo:
+
+```
+┌─────────────────────────┐
+│ 1. Usuario selecciona   │
+│    archivo (input file) │
+└────────┬────────────────┘
+         │
+         │ onChange event
+         │
+         ▼
+┌─────────────────────────────────┐
+│ 2. handleFileChange()           │
+│    - Recibe File object         │
+│    - Tipo: portada o PDF        │
+└────────┬────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│ 3. FileReader API               │
+│    const reader = new           │
+│        FileReader();            │
+│    reader.readAsDataURL(file);  │
+└────────┬────────────────────────┘
+         │
+         │ Convierte a Base64
+         │
+         ▼
+┌─────────────────────────────────┐
+│ 4. reader.onloadend             │
+│    - result: string (Base64)    │
+│    - Formato completo:          │
+│      "data:image/png;base64,... │
+│      "data:application/pdf;...  │
+└────────┬────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│ 5. Actualizar estado            │
+│    setCurrentBook({             │
+│      ...prev,                   │
+│      [field]: base64String      │
+│    })                           │
+└────────┬────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│ 6. Vista previa (si es imagen)  │
+│    <img src={base64String} />   │
+└─────────────────────────────────┘
+```
+
+### Código de transformación:
+
+```typescript
+const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>, 
+    field: 'portadaBase64' | 'pdfBase64'
+) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result as string;
+            // Mantiene el prefijo completo: data:image/png;base64,...
+            setCurrentBook(prev => ({ ...prev, [field]: base64String }));
         };
+        reader.readAsDataURL(file);
     }
-}
-```
-
-**✅ Cumple:** DDD con servicios por dominio (universidad).
-
----
-
-## 🗄️ Base de Datos
-
-### Tablas Requeridas
-
-#### Usuarios
-**Archivo:** [`user.model.ts`](backend/src/domain/models/users/user.model.ts)
-```typescript
-@Entity()
-export class User {
-    @PrimaryColumn("uuid")
-    id!: string;
-    
-    @Column("varchar", { length: 255 })
-    name!: string;          // username
-    
-    @Column("varchar", { length: 255 })
-    email!: string;
-    
-    @Column("varchar", { length: 50 })
-    rol!: string;           // bibliotecario/alumno
-    
-    @Column("text")
-    password!: string;      // hasheada
-}
-```
-
-#### Libros
-**Archivo:** [`book.model.ts`](backend/src/domain/models/books/book.model.ts)
-```typescript
-@Entity()
-export class Book {
-    @PrimaryColumn("uuid")
-    id!: string;
-    
-    @Column("varchar", { length: 500 })
-    titulo!: string;
-    
-    @Column("varchar", { length: 255 })
-    genero!: string;
-    
-    @Column("text")
-    portadaBase64!: string;  // ✅ Base64
-    
-    @Column("text")
-    pdfBase64!: string;      // ✅ Base64
-    
-    @Column("varchar", { length: 255 })
-    authorName!: string;
-    
-    @Column("varchar", { length: 20 })
-    publishDate!: string;
-}
-```
-
-**✅ Cumple:** Estructura de BD con campos Base64.
-
----
-
-## 🎨 Arquitectura Frontend
-
-### Pantallas Implementadas
-
-#### 1. Login
-**Archivo:** [`Login.tsx`](frontend/src/components/Login.tsx)
-- ✅ Validación de credenciales
-- ✅ Detección de rol
-- ✅ Redirección según rol
-
-#### 2. Menú Bibliotecario
-**Archivo:** [`LibrarianMenu.tsx`](frontend/src/components/LibrarianMenu.tsx)
-- ✅ Acceso a Gestión de Usuarios
-- ✅ Acceso a Gestión de Libros
-
-#### 3. CRUD Usuarios
-**Archivo:** [`UserCRUD.tsx`](frontend/src/components/UserCRUD.tsx)
-- ✅ Listar usuarios
-- ✅ Registrar usuarios
-- ✅ Editar usuarios
-- ✅ Eliminar usuarios
-
-#### 4. CRUD Libros
-**Archivo:** [`BookCRUD.tsx`](frontend/src/components/BookCRUD.tsx)
-- ✅ Listar libros internos
-- ✅ Registrar libros con Base64
-- ✅ Editar libros
-- ✅ Eliminar libros
-- ✅ Conversión automática de archivos a Base64
-
-#### 5. Menú Alumno
-**Archivo:** [`StudentMenu.tsx`](frontend/src/components/StudentMenu.tsx)
-- ✅ Catálogo de todos los libros (internos + externos)
-- ✅ Acceso al buscador
-
-#### 6. Buscador Universal
-**Arquivo:** [`BookSearch.tsx`](frontend/src/components/BookSearch.tsx)
-- ✅ Búsqueda por filtro
-- ✅ Muestra libros internos y externos
-- ✅ Badge con nombre de universidad
-- ✅ Carga automática al inicio
-
-#### 7. Visualizador de PDF
-**Archivo:** [`PDFViewer.tsx`](frontend/src/components/PDFViewer.tsx)
-- ✅ Muestra PDFs en Base64
-- ✅ Muestra PDFs desde URL
-- ✅ Detección automática del formato
-
-### Patrones Frontend
-
-#### MVC (Vista-Controller)
-```typescript
-// Vista (JSX)
-<button onClick={handleSearch}>Buscar</button>
-
-// Controller (lógica)
-const handleSearch = async () => {
-    const response = await apiService.searchBooks(query);
-    setResults(response.data);
 };
 ```
 
-#### MVVM (Mapeo de Datos)
-**Archivo:** [`book.viewmodel.ts`](frontend/src/viewmodels/book.viewmodel.ts)
-```typescript
-export class BookViewModel {
-    idLibro: string;
-    titulo: string;
-    portadaUrl: string;  // Puede ser Base64 o URL
-    pdfUrl: string;      // Puede ser Base64 o URL
-    universidad: string;
-    
-    static fromInternalBook(book: any): BookViewModel {
-        return new BookViewModel({
-            ...book,
-            universidad: "𒊑"  // Marcado como interno
-        });
-    }
-    
-    static fromExternalBook(book: any, uni: string): BookViewModel {
-        return new BookViewModel({
-            ...book,
-            universidad: uni
-        });
-    }
-}
+### Formatos generados:
+
+**Imagen (portada):**
+```
+data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...
 ```
 
-**✅ Cumple:** Componentes separados, HTML sin lógica.
+**PDF:**
+```
+data:application/pdf;base64,JVBERi0xLjQKJeLjz9...
+```
 
 ---
 
-## ✅ Verificación de Cumplimiento
+## 💾 FLUJO 6: CRUD COMPLETO DE LIBROS INTERNOS
 
-### Reglas Cumplidas
-
-| Regla | Estado | Evidencia |
-|-------|--------|-----------|
-| No consultas fuera de DAO | ✅ | Todos los SELECT en `*.dao.ts` |
-| No lógica en ViewModels | ✅ | Solo propiedades y mapeo |
-| No servicios externos en DAO | ✅ | ApiServices separados |
-| No HTML con lógica en Controllers | ✅ | Backend solo JSON |
-| No modificar usuarios externos | ✅ | Solo locales en CQRS |
-| No editar libros externos | ✅ | Solo lectura de APIs |
-| PDFs en Base64 | ✅ | Campos `*Base64` en BD |
-| Separación por rol | ✅ | StudentMenu ≠ LibrarianMenu |
-
-### Estructura de Archivos
+### CREATE (Crear libro):
 
 ```
-backend/
-├── src/
-│   ├── aplication/
-│   │   ├── controllers/      ✅ MVC
-│   │   ├── viewmodels/       ✅ MVVM
-│   │   └── services/
-│   │       └── external/     ✅ DDD (ApiServices)
-│   ├── domain/
-│   │   ├── models/           ✅ Entidades BD
-│   │   └── interfaces/       ✅ Contratos
-│   └── infrestructure/
-│       ├── dao/              ✅ Solo consultas
-│       ├── cqrs/             ✅ Solo comandos
-│       └── database/         ✅ Conexión
+Frontend (BookCRUD.tsx)
+    │
+    │ handleSave() → apiService.createBook()
+    │
+    ▼
+BookController.registrarLibro()
+    │
+    │ 1. Recibe datos del libro con Base64
+    │ 2. Crea instancia Book
+    │
+    ▼
+BookCQRS.CreateBook()
+    │
+    │ 3. Validaciones:
+    │    - Campos requeridos
+    │    - Formato Base64 válido (regex)
+    │    - Longitud género <= 255
+    │ 4. Genera UUID
+    │ 5. Asigna fecha si no existe
+    │
+    ▼
+BookDAO.insertLibro()
+    │
+    │ 6. TypeORM save()
+    │
+    ▼
+PostgreSQL
+```
 
-frontend/
-└── src/
-    ├── components/           ✅ Vistas separadas
-    ├── services/             ✅ apiService
-    └── viewmodels/           ✅ MVVM
+### READ (Leer libro):
+
+```
+Frontend → GET /api/books/:id
+    │
+    ▼
+BookController.obtenerLibro()
+    │
+    ▼
+BookDAO.getLIbroInternoById()
+    │
+    ▼
+BookViewModel.fromInternalBook()
+    │
+    ▼
+Response JSON
+```
+
+### UPDATE (Actualizar libro):
+
+```
+Frontend → PUT /api/books/:id
+    │
+    ▼
+BookController.editarLibro()
+    │
+    ▼
+BookCQRS.UpdateBook()
+    │
+    │ Validaciones parciales
+    │
+    ▼
+BookDAO.updateLibro()
+    │
+    ▼
+PostgreSQL UPDATE
+```
+
+### DELETE (Eliminar libro):
+
+```
+Frontend → DELETE /api/books/:id
+    │
+    ▼
+BookController.eliminarLibro()
+    │
+    ▼
+BookCQRS.DeleteBook()
+    │
+    ▼
+BookDAO.deleteLibro()
+    │
+    ▼
+PostgreSQL DELETE
+```
+
+### Validaciones en BookCQRS.CreateBook():
+
+```typescript
+// 1. Campos requeridos
+if (!data.titulo || !data.authorName || !data.portadaBase64 || !data.pdfBase64) {
+    throw new Error("Datos incompletos");
+}
+
+// 2. Validación Base64
+const base64Regex = /^data:(image\/(png|jpg|jpeg|gif|webp)|application\/pdf);base64,([A-Za-z0-9+/=]+)$/;
+if (!base64Regex.test(data.portadaBase64)) {
+    throw new Error("Formato de portada Base64 inválido");
+}
+
+// 3. Validación longitud
+if (data.genero && data.genero.length > 255) {
+    throw new Error("El género no puede exceder 255 caracteres");
+}
+```
+
+---
+
+## 📊 FLUJO 7: VISUALIZACIÓN DE PDFS
+
+### Archivos implicados:
+- `PDFViewer.tsx`
+
+### Diagrama de flujo:
+
+```
+┌─────────────────────────┐
+│ Usuario hace clic en    │
+│ "Leer Libro"            │
+└────────┬────────────────┘
+         │
+         ▼
+┌─────────────────────────────────┐
+│ PDFViewer component             │
+│ Props: { pdfUrl, title }        │
+└────────┬────────────────────────┘
+         │
+         │ 1. Detectar tipo
+         │
+         ├─────────────────┬────────────────┐
+         │                 │                │
+         ▼                 ▼                ▼
+    Es URL?          Es Base64?     Es Base64 sin prefijo?
+    http://...       data:app...     JVBERi0xLjQ...
+         │                 │                │
+         │                 │                │
+         └─────────────────┴────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────┐
+│ Normalización:                          │
+│ - URL → usar directamente               │
+│ - Base64 completo → usar directamente   │
+│ - Base64 sin prefijo → agregar prefijo  │
+│   "data:application/pdf;base64,"        │
+└────────┬────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ Renderizar en iframe:                   │
+│ <iframe src={pdfSrc} />                 │
+└─────────────────────────────────────────┘
+```
+
+### Código de detección:
+
+```typescript
+const isBase64 = !pdfUrl.startsWith('http') && !pdfUrl.startsWith('blob:');
+
+const pdfSrc = isBase64
+    ? (pdfUrl.startsWith('data:application/pdf;base64,') 
+        ? pdfUrl 
+        : `data:application/pdf;base64,${pdfUrl}`)
+    : pdfUrl;
+```
+
+---
+
+## 📈 ESTADÍSTICAS DEL SISTEMA
+
+El sistema retorna estadísticas en cada búsqueda:
+
+```json
+{
+  "success": true,
+  "data": [...libros...],
+  "stats": {
+    "internos": 5,
+    "externos": {
+      "utl": 10,
+      "unam": 8,
+      "oxford": 12
+    },
+    "total": 35
+  }
+}
+```
+
+---
+
+## 🏗️ ARQUITECTURA DEL PROYECTO
+
+### Backend (Clean Architecture):
+
+```
+backend/src/
+├── aplication/
+│   ├── controllers/      → MVC (Orquestadores)
+│   ├── viewmodels/       → MVVM (Mapeo de datos)
+│   └── services/
+│       └── external/     → DDD (ApiServices por dominio)
+├── domain/
+│   ├── models/           → Entidades de negocio
+│   └── interfaces/       → Contratos
+└── infrestructure/
+    ├── dao/              → Solo consultas (SELECT)
+    ├── cqrs/             → Solo comandos (INSERT/UPDATE/DELETE)
+    └── database/         → Conexión TypeORM
+```
+
+### Frontend (React + TypeScript):
+
+```
+frontend/src/
+├── components/           → 7 pantallas principales
+│   ├── Login.tsx
+│   ├── LibrarianMenu.tsx
+│   ├── StudentMenu.tsx
+│   ├── BookCRUD.tsx
+│   ├── UserCRUD.tsx
+│   ├── BookSearch.tsx
+│   └── PDFViewer.tsx
+├── services/             → API client
+├── viewmodels/           → MVVM (Transformación)
+└── context/              → AuthContext (manejo de sesión)
 ```
 
 ---
 
 ## 🚀 Ejecución del Proyecto
 
-### Backend
+### Backend:
 ```bash
 cd backend
 bun install
 bun run dev
 ```
 
-### Frontend
+### Frontend:
 ```bash
 cd frontend
 npm install
@@ -568,9 +643,9 @@ npm run dev
 
 ---
 
-## 📊 Resumen Ejecutivo
+## ✅ RESUMEN EJECUTIVO
 
-**✅ PROYECTO 100% COMPLETO**
+**Estado del Proyecto: COMPLETO AL 100%**
 
 | Componente | Patrón | Estado |
 |-----------|--------|--------|
@@ -582,4 +657,4 @@ npm run dev
 | Base de Datos | 2 tablas con Base64 | ✅ |
 | Frontend | 7 pantallas separadas | ✅ |
 
-**Sin errores. Patrones estrictamente respetados. Requisitos cumplidos al 100%.**
+**Patrones arquitectónicos estrictamente respetados. Requisitos cumplidos al 100%.**
