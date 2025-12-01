@@ -15,7 +15,7 @@ export class OxfordApiService implements IBookService {
             pdfBase64: externalBook.pdfUrl || externalBook.pdfBase64 || "",
             authorName: externalBook.universidad || "Cambridge",
             genero: externalBook.genre || externalBook.genero || "",
-            publishDate: new Date().toISOString().split('T')[0] // Default date as not provided in example
+            publishDate: new Date().toISOString().split('T')[0] 
         };
     }
 
@@ -23,7 +23,6 @@ export class OxfordApiService implements IBookService {
         try {
             console.log("Obteniendo libros de Cambridge:", this.baseUrl);
 
-            // Add 5-second timeout to prevent hanging
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -59,9 +58,6 @@ export class OxfordApiService implements IBookService {
     }
 
     async searchExternalBooksByTitle(title: string): Promise<book[]> {
-        // Since the URL provided is for getAll, we might need to filter manually or check if there is a search endpoint.
-        // For now, let's fetch all and filter, or just return empty if search is not supported by this specific URL.
-        // Assuming we can filter client-side for now as the URL is specific.
         try {
             const allBooks = await this.getAllBooks();
             return allBooks.filter(b => b.titulo.toLowerCase().includes(title.toLowerCase()));
